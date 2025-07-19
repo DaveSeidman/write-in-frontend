@@ -1,0 +1,52 @@
+{
+  "name": "cocktail-generator",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "react-router-dom": "^7.7.0",
+    "sass": "^1.89.2"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.7.0",
+    "eslint": "^8.57.1",
+    "eslint-config-airbnb": "^19.0.4",
+    "eslint-plugin-import": "^2.32.0",
+    "eslint-plugin-react": "^7.37.5",
+    "vite": "^7.0.5"
+  },
+  "eslintConfig": {
+    "extends": [
+      "airbnb",
+      "plugin:@react-three/recommended"
+    ],
+    "plugins": [
+      "@react-three"
+    ],
+    "env": {
+      "es6": true
+    },
+    "rules": {
+      "react/no-unknown-property": 0,
+      "no-param-reassign": 0,
+      "no-return-assign": 0,
+      "object-curly-newline": 0,
+      "no-console": 0,
+      "no-restricted-globals": 0,
+      "no-undef": 0,
+      "max-len": 0,
+      "react/function-component-definition": 0,
+      "jsx-a11y/alt-text": 0,
+      "jsx-a11y/control-has-associated-label": 0
+    }
+  }
+}
