@@ -17,3 +17,8 @@ $purple: rgb(153, 133, 186);
 html, body, #root, .app {
   overscroll-behavior-x: none;
 }
+
+.hidden {
+  visibility: hidden;
+  opacity: 0;
+}
