@@ -12,10 +12,10 @@ function App() {
       <Routes>
         <Route path="/" element={
           <div className="menu">
-            <a href="/quiz">Quiz</a>
-            <a href="/question">Question</a>
-            <a href="/results">Results</a>
-            <a href="/admin">Admin</a>
+            <a href="quiz">Quiz</a>
+            <a href="question">Question</a>
+            <a href="results">Results</a>
+            <a href="admin">Admin</a>
           </div>
         } />
         <Route path="/quiz" element={<Quiz />} />
