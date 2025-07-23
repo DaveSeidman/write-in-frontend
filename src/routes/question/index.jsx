@@ -98,7 +98,7 @@ const Question = () => {
     const isLocalhost = window.location.hostname === 'localhost';
     const URL = isLocalhost
       ? 'http://localhost:8000'
-      : 'https://p2vmztmwjp.us-east-1.awsapprunner.com';
+      : 'https://cocktail-generator-server.onrender.com/';
 
     const socket = io(URL, {
       transports: ['websocket'],
