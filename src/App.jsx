@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Routes, Route } from 'react-router-dom';
-import Admin from './routes/admin';
 import Quiz from './routes/quiz';
+import Question from './routes/question';
 import Results from './routes/results';
+import Admin from './routes/admin';
 import './index.scss';
 
 function App() {
@@ -12,13 +13,16 @@ function App() {
         <Route path="/" element={
           <div className="menu">
             <a href="/quiz">Quiz</a>
+            <a href="/question">Question</a>
             <a href="/results">Results</a>
             <a href="/admin">Admin</a>
           </div>
         } />
-        <Route path="/admin" element={<Admin />} />
         <Route path="/quiz" element={<Quiz />} />
         <Route path="/results" element={<Results />} />
+        <Route path="/question" element={<Question />} />
+        <Route path="/admin" element={<Admin />} />
+
       </Routes>
     </div>
   );
