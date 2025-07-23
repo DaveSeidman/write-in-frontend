@@ -7,11 +7,20 @@ import './index.scss';
 
 function App() {
   return (
-    <Routes>
-      <Route path="/admin" element={<Admin />} />
-      <Route path="/quiz" element={<Quiz />} />
-      <Route path="/results" element={<Results />} />
-    </Routes>
+    <div className='app'>
+      <Routes>
+        <Route path="/" element={
+          <div className="menu">
+            <a href="/quiz">Quiz</a>
+            <a href="/results">Results</a>
+            <a href="/admin">Admin</a>
+          </div>
+        } />
+        <Route path="/admin" element={<Admin />} />
+        <Route path="/quiz" element={<Quiz />} />
+        <Route path="/results" element={<Results />} />
+      </Routes>
+    </div>
   );
 }
 
