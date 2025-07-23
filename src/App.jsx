@@ -14,13 +14,13 @@ function App() {
           <div className="menu">
             <a href="#/quiz">Quiz</a>
             <a href="#/question">Question</a>
-            <a href="#/results">Results</a>
             <a href="#/admin">Admin</a>
+            <a href="#/results">Results</a>
           </div>
         } />
         <Route path="/quiz" element={<Quiz />} />
-        <Route path="/results" element={<Results />} />
         <Route path="/question" element={<Question />} />
+        <Route path="/results" element={<Results />} />
         <Route path="/admin" element={<Admin />} />
       </Routes>
     </div>
