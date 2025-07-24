@@ -15,7 +15,7 @@ const Admin = ({ }) => {
 
     const socket = io(URL, {
       transports: ['websocket'],
-      query: { role: 'question' } // optional for future filtering
+      query: { role: 'admin' }
     });
 
     socketRef.current = socket;
@@ -23,6 +23,10 @@ const Admin = ({ }) => {
     socket.on('connect', () => {
       console.log('Connected to socket server:', socket.id);
     });
+
+    socket.on('allsubmissions', (data) => {
+      console.log('getting all submissions', data)
+    })
 
     socket.on('submission', (data) => {
       console.log({ data })
