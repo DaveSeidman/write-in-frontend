@@ -1,5 +1,18 @@
 @use '../../index.scss' as src;
 
 .results {
+  height: calc(100vh - 5rem);
+  .submission-list {
+    display: flex;
+    width: 100%;
+    height: 100%;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    .preview-canvas {
+      width: 400px;
+      height: 150px;
+    }
+  }
 
 }

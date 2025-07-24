@@ -33,6 +33,14 @@ html, body, #root, .app {
       margin: 1rem;
     }
   }
+
+  :disabled {
+    opacity: .5;
+  }
+
+  button {
+    padding: 1rem 2rem;
+  }
 }
 
 .hidden {

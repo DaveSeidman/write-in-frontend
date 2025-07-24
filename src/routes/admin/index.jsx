@@ -8,9 +8,9 @@ const Admin = () => {
   const [submissions, setSubmissions] = useState([]);
 
   useEffect(() => {
-    const isLocalhost = window.location.hostname === 'localhost';
+    const isLocalhost = window.location.hostname !== 'daveseidman.github.io';
     const URL = isLocalhost
-      ? 'http://localhost:8000'
+      ? `http://${location.hostname}:8000`
       : 'https://cocktail-generator-server.onrender.com/';
 
     const socket = io(URL, {

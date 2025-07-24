@@ -1,20 +1,10 @@
 import React, { useRef, useState, useEffect } from "react";
 import { getStroke } from "perfect-freehand";
+import { ptsToSvgPath } from "../../utils";
 import { io } from "socket.io-client";
 
 import './index.scss';
 
-// Helper to convert outline points to SVG path
-function ptsToSvgPath(points) {
-  if (!points.length) return '';
-  const d = points.reduce((acc, [x0, y0], i, arr) => {
-    const [x1, y1] = arr[(i + 1) % arr.length];
-    acc.push(x0, y0, (x0 + x1) / 2, (y0 + y1) / 2);
-    return acc;
-  }, ['M', points[0][0], points[0][1], 'Q']);
-  d.push('Z');
-  return d.join(' ');
-}
 
 const Question = () => {
   const canvasRef = useRef();
@@ -92,17 +82,20 @@ const Question = () => {
 
   const submit = () => {
     socketRef.current.emit('submit', points)
+    const ctx = canvasRef.current.getContext('2d');
+    ctx.clearRect(0, 0, width, height)
+    setPoints([])
   }
 
   useEffect(() => {
-    const isLocalhost = window.location.hostname === 'localhost';
+    const isLocalhost = window.location.hostname !== 'daveseidman.github.io';
     const URL = isLocalhost
-      ? 'http://localhost:8000'
+      ? `http://${location.hostname}:8000`
       : 'https://cocktail-generator-server.onrender.com/';
 
     const socket = io(URL, {
       transports: ['websocket'],
-      query: { role: 'question' } // optional for future filtering
+      query: { role: 'question' }
     });
 
     socketRef.current = socket;
@@ -132,7 +125,7 @@ const Question = () => {
       />
       <div className="buttons">
         <button onClick={replay}>Replay</button>
-        <button onClick={submit}>Submit</button>
+        <button onClick={submit} disabled={points.length === 0}>Submit</button>
       </div>
     </div>
   );
