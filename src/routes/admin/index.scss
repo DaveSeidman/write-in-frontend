@@ -1,5 +1,35 @@
-@use '../../index.scss' as src;
-
 .admin {
+  padding: 1rem;
 
+  .submission-list {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+  }
+
+  .submission-item {
+    border: 1px solid #ccc;
+    padding: 1rem;
+    background: #fafafa;
+  }
+
+  .preview-canvas {
+    width: 100%;
+    max-width: 800px;
+    height: auto;
+    border: 1px solid #eee;
+    display: block;
+  }
+
+  .actions {
+    margin-top: 1rem;
+    display: flex;
+    gap: 1rem;
+  }
+
+  button {
+    padding: 0.5rem 1rem;
+    font-size: 1rem;
+    cursor: pointer;
+  }
 }
