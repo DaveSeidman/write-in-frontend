@@ -1,6 +1,7 @@
 import React, { useRef, useEffect, useState } from "react";
 import { io } from "socket.io-client";
 import { getStroke } from "perfect-freehand";
+import { ptsToSvgPath } from "../../utils"; // make sure this path is valid
 import './index.scss';
 
 const Admin = () => {
@@ -85,22 +86,20 @@ const CanvasPreview = ({ points }) => {
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas || !points) return;
+    if (!canvas || !points || !Array.isArray(points)) return;
+
     const ctx = canvas.getContext('2d');
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    const stroke = getStroke(points);
-
-    const path = new Path2D();
-    if (stroke.length) {
-      path.moveTo(stroke[0][0], stroke[0][1]);
-      for (let i = 1; i < stroke.length; i++) {
-        path.lineTo(stroke[i][0], stroke[i][1]);
-      }
-    }
-
     ctx.fillStyle = 'black';
-    ctx.fill(path);
+
+    points.forEach(strokePoints => {
+      if (!Array.isArray(strokePoints) || strokePoints.length === 0) return;
+
+      const strokeInput = strokePoints.map(p => [p.x, p.y, p.pressure]);
+      const outline = getStroke(strokeInput);
+      const path = new Path2D(ptsToSvgPath(outline));
+      ctx.fill(path);
+    });
   }, [points]);
 
   return <canvas ref={canvasRef} width={800} height={400} className="preview-canvas" />;

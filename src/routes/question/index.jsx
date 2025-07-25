@@ -5,10 +5,9 @@ import { io } from "socket.io-client";
 
 import './index.scss';
 
-
 const Question = () => {
   const canvasRef = useRef();
-  const [points, setPoints] = useState([]);
+  const [strokes, setStrokes] = useState([]); // array of arrays
   const [isDrawing, setDrawing] = useState(false);
   const socketRef = useRef();
 
@@ -23,7 +22,8 @@ const Question = () => {
       t: performance.now(),
       pressure: e.pressure || 0.5,
     };
-    setPoints([p]);
+
+    setStrokes(prev => [...prev, [p]]);
     setDrawing(true);
   };
 
@@ -36,29 +36,38 @@ const Question = () => {
       t: performance.now(),
       pressure: e.pressure || 0.5,
     };
-    const newPoints = [...points, p];
-    setPoints(newPoints);
-    drawPoints(newPoints);
+
+    setStrokes(prev => {
+      const newStrokes = [...prev];
+      newStrokes[newStrokes.length - 1] = [...newStrokes[newStrokes.length - 1], p];
+      drawPoints(newStrokes);
+      return newStrokes;
+    });
   };
 
   const handlePointerUp = () => setDrawing(false);
 
-  const drawPoints = (pts, clear = true) => {
+  const drawPoints = (strokesArray, clear = true) => {
     const ctx = canvasRef.current.getContext('2d');
     if (clear) ctx.clearRect(0, 0, width, height);
 
-    const strokeInput = pts.map(p => [p.x, p.y, p.pressure]);
-    const outline = getStroke(strokeInput);
-    const path = new Path2D(ptsToSvgPath(outline));
     ctx.fillStyle = 'black';
-    ctx.fill(path);
+
+    strokesArray.forEach(stroke => {
+      const input = stroke.map(p => [p.x, p.y, p.pressure]);
+      const outline = getStroke(input);
+      const path = new Path2D(ptsToSvgPath(outline));
+      ctx.fill(path);
+    });
   };
 
   const replay = () => {
-    if (!points.length) return;
+    if (!strokes.length) return;
 
-    const startTime = points[0].t;
+    const flatPoints = strokes.flat();
+    const startTime = flatPoints[0].t;
     let i = 1;
+
     const ctx = canvasRef.current.getContext('2d');
     ctx.clearRect(0, 0, width, height);
 
@@ -66,13 +75,24 @@ const Question = () => {
       const now = performance.now();
       const elapsed = now - startTime;
 
-      // Advance only if the next point's time has arrived
-      if (i < points.length && points[i].t - startTime <= elapsed) {
-        i++;
-        drawPoints(points.slice(0, i));
+      let tempStrokes = [[]];
+      for (let s = 0; s < strokes.length; s++) {
+        tempStrokes[s] = [];
+        for (let j = 0; j < strokes[s].length; j++) {
+          const pt = strokes[s][j];
+          if (pt.t - startTime <= elapsed) {
+            tempStrokes[s].push(pt);
+          }
+        }
       }
 
-      if (i < points.length) {
+      drawPoints(tempStrokes);
+
+      if (flatPoints[i] && flatPoints[i].t - startTime <= elapsed) {
+        i++;
+      }
+
+      if (i < flatPoints.length) {
         requestAnimationFrame(animate);
       }
     };
@@ -80,12 +100,17 @@ const Question = () => {
     requestAnimationFrame(animate);
   };
 
-  const submit = () => {
-    socketRef.current.emit('submit', points)
+  const reset = () => {
     const ctx = canvasRef.current.getContext('2d');
-    ctx.clearRect(0, 0, width, height)
-    setPoints([])
-  }
+    ctx.clearRect(0, 0, width, height);
+    setStrokes([]);
+  };
+
+  const submit = () => {
+    if (!strokes.length) return;
+    socketRef.current.emit('submit', strokes);
+    reset();
+  };
 
   useEffect(() => {
     const isLocalhost = window.location.hostname !== 'daveseidman.github.io';
@@ -124,8 +149,9 @@ const Question = () => {
         onPointerLeave={handlePointerUp}
       />
       <div className="buttons">
-        <button onClick={replay}>Replay</button>
-        <button onClick={submit} disabled={points.length === 0}>Submit</button>
+        <button onClick={replay} disabled={!strokes.length}>Replay</button>
+        <button onClick={reset} disabled={!strokes.length}>Reset</button>
+        <button onClick={submit} disabled={!strokes.length}>Submit</button>
       </div>
     </div>
   );
