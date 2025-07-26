@@ -2,7 +2,10 @@
 
 .results {
   // height: calc(100vh - 5rem);
-  height: 100%;
+  position: absolute;
+  top: 0%;
+  // outline: 20px solid red;
+  height: 50%;
   width: 100%;
   background: src.$stone;
 
