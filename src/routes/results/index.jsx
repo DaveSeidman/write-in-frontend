@@ -5,6 +5,7 @@ import { io } from "socket.io-client";
 
 import './index.scss';
 
+
 const Results = () => {
   const isLocalhost = window.location.hostname !== 'daveseidman.github.io';
   const URL = isLocalhost
@@ -13,6 +14,7 @@ const Results = () => {
 
   const [submissions, setSubmissions] = useState([]);
   const socketRef = useRef();
+
 
   useEffect(() => {
     const socket = io(URL, {
@@ -39,6 +41,7 @@ const Results = () => {
         if (alreadyExists) {
           return prev.map(s => s.timestamp === submission.timestamp ? submission : s);
         }
+        console.log('animate this submission', submission)
         return [submission, ...prev];
       });
     });
@@ -53,32 +56,79 @@ const Results = () => {
       <h1>Results</h1>
       <div className="submission-list">
         {submissions.map((submission) => (
-          <CanvasPreview key={submission.timestamp} points={submission.data} />
+          <CanvasPreview
+            key={submission.timestamp}
+            strokes={submission.data}
+          // animated={false}
+          />
         ))}
       </div>
     </div>
   );
 };
 
-const CanvasPreview = ({ points }) => {
+const CanvasPreview = ({ strokes }) => {
   const canvasRef = useRef();
+  const width = 800;
+  const height = 400;
 
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas || !points || !Array.isArray(points)) return;
+  const drawPoints = (strokesArray, clear = true) => {
+    const ctx = canvasRef.current.getContext('2d');
+    if (clear) ctx.clearRect(0, 0, width, height);
 
-    const ctx = canvas.getContext('2d');
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.fillStyle = 'black';
 
-    points.forEach(strokePoints => {
-      if (!Array.isArray(strokePoints) || strokePoints.length === 0) return;
-
-      const stroke = getStroke(strokePoints.map(p => [p.x, p.y, p.pressure]));
-      const path = new Path2D(ptsToSvgPath(stroke));
+    strokesArray.forEach(stroke => {
+      const input = stroke.map(p => [p.x, p.y, p.pressure]);
+      const outline = getStroke(input);
+      const path = new Path2D(ptsToSvgPath(outline));
       ctx.fill(path);
     });
-  }, [points]);
+  };
+
+
+  const replay = () => {
+    console.log({ strokes })
+    if (!strokes.length) return;
+
+    const flatPoints = strokes.flat();
+    const startTime = flatPoints[0].t;
+    let i = 1;
+
+    const ctx = canvasRef.current.getContext('2d');
+    ctx.clearRect(0, 0, width, height);
+
+    const animate = () => {
+
+      const now = performance.now();
+      const elapsed = now - startTime;
+
+      let tempStrokes = [[]];
+      for (let s = 0; s < strokes.length; s++) {
+        tempStrokes[s] = [];
+        for (let j = 0; j < strokes[s].length; j++) {
+          const pt = strokes[s][j];
+          if (pt.t - startTime <= elapsed) {
+            tempStrokes[s].push(pt);
+          }
+        }
+      }
+
+      drawPoints(tempStrokes);
+
+      if (flatPoints[i] && flatPoints[i].t - startTime <= elapsed) {
+        i++;
+      }
+      if (i < flatPoints.length) {
+        requestAnimationFrame(animate);
+      }
+    };
+
+    requestAnimationFrame(animate);
+  };
+  useEffect(() => {
+    replay();
+  }, [])
 
   return <canvas ref={canvasRef} width={800} height={400} className="preview-canvas" />;
 };

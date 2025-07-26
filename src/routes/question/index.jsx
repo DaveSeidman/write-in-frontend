@@ -7,8 +7,10 @@ import './index.scss';
 
 const Question = () => {
   const canvasRef = useRef();
+  const t0Ref = useRef(null); // reference time
   const [strokes, setStrokes] = useState([]); // array of arrays
   const [isDrawing, setDrawing] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
   const socketRef = useRef();
 
   const width = 800;
@@ -16,10 +18,16 @@ const Question = () => {
 
   const handlePointerDown = (e) => {
     const rect = canvasRef.current.getBoundingClientRect();
+    const now = performance.now();
+
+    if (t0Ref.current === null) {
+      t0Ref.current = now; // set t0 at the first touch
+    }
+
     const p = {
       x: e.clientX - rect.left,
       y: e.clientY - rect.top,
-      t: performance.now(),
+      t: now - t0Ref.current,
       pressure: e.pressure || 0.5,
     };
 
@@ -30,10 +38,12 @@ const Question = () => {
   const handlePointerMove = (e) => {
     if (!isDrawing) return;
     const rect = canvasRef.current.getBoundingClientRect();
+    const now = performance.now();
+
     const p = {
       x: e.clientX - rect.left,
       y: e.clientY - rect.top,
-      t: performance.now(),
+      t: now - t0Ref.current,
       pressure: e.pressure || 0.5,
     };
 
@@ -61,54 +71,18 @@ const Question = () => {
     });
   };
 
-  const replay = () => {
-    if (!strokes.length) return;
-
-    const flatPoints = strokes.flat();
-    const startTime = flatPoints[0].t;
-    let i = 1;
-
-    const ctx = canvasRef.current.getContext('2d');
-    ctx.clearRect(0, 0, width, height);
-
-    const animate = () => {
-      const now = performance.now();
-      const elapsed = now - startTime;
-
-      let tempStrokes = [[]];
-      for (let s = 0; s < strokes.length; s++) {
-        tempStrokes[s] = [];
-        for (let j = 0; j < strokes[s].length; j++) {
-          const pt = strokes[s][j];
-          if (pt.t - startTime <= elapsed) {
-            tempStrokes[s].push(pt);
-          }
-        }
-      }
-
-      drawPoints(tempStrokes);
-
-      if (flatPoints[i] && flatPoints[i].t - startTime <= elapsed) {
-        i++;
-      }
-
-      if (i < flatPoints.length) {
-        requestAnimationFrame(animate);
-      }
-    };
-
-    requestAnimationFrame(animate);
-  };
-
   const reset = () => {
     const ctx = canvasRef.current.getContext('2d');
     ctx.clearRect(0, 0, width, height);
     setStrokes([]);
+    t0Ref.current = null;
   };
 
   const submit = () => {
     if (!strokes.length) return;
     socketRef.current.emit('submit', strokes);
+    setSubmitted(true);
+    setTimeout(() => setSubmitted(false), 3000);
     reset();
   };
 
@@ -136,7 +110,9 @@ const Question = () => {
 
   return (
     <div className="question">
-      <h1>Which Brand do you think this event is for?</h1>
+      <h2>Take your guess:</h2>
+      <h1>What breakthrough product will be revealed?</h1>
+      <p>product name only please, no brand guesses!!</p>
       <canvas
         ref={canvasRef}
         width={width}
@@ -149,9 +125,11 @@ const Question = () => {
         onPointerLeave={handlePointerUp}
       />
       <div className="buttons">
-        <button onClick={replay} disabled={!strokes.length}>Replay</button>
         <button onClick={reset} disabled={!strokes.length}>Reset</button>
         <button onClick={submit} disabled={!strokes.length}>Submit</button>
+      </div>
+      <div className={`thanks ${submitted ? '' : 'hidden'}`}>
+        <h1>Your Guess has been Submitted, Thanks!</h1>
       </div>
     </div>
   );
