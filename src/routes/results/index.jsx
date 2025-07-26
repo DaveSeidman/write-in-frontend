@@ -60,7 +60,6 @@ const Results = () => {
 
   return (
     <div className="results">
-      <h1>Results</h1>
       <div className="submission-list">
         {submissions.map((submission) => (
           <CanvasPreview
@@ -84,7 +83,7 @@ const CanvasPreview = ({ strokes }) => {
     if (!ctx) return;
     if (clear) ctx.clearRect(0, 0, width, height);
 
-    ctx.fillStyle = 'black';
+    ctx.fillStyle = 'brown';
 
     strokesArray.forEach(stroke => {
       const input = stroke.map(p => [p.x, p.y, p.pressure]);

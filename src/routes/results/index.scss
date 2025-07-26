@@ -1,7 +1,11 @@
 @use '../../index.scss' as src;
 
 .results {
-  height: calc(100vh - 5rem);
+  // height: calc(100vh - 5rem);
+  height: 100%;
+  width: 100%;
+  background: src.$stone;
+
   .submission-list {
     display: flex;
     width: 100%;
