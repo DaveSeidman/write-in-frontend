@@ -28,13 +28,20 @@ const Results = () => {
       console.log('✅ Connected to socket server (results):', socket.id);
     });
 
+    // TODO: change to "existing-submissions"?
     socket.on('approvedsubmissions', (data) => {
       console.log('📦 Approved submissions on boot:', data);
       setSubmissions(data.sort((a, b) => b.timestamp - a.timestamp));
     });
 
     socket.on('submission-updated', (submission) => {
-      if (!submission.approved) return;
+      if (!submission.approved) {
+        // Remove the denied submission from the list
+        setSubmissions(prev =>
+          prev.filter(s => s.timestamp !== submission.timestamp)
+        );
+        return;
+      }
 
       setSubmissions(prev => {
         const alreadyExists = prev.some(s => s.timestamp === submission.timestamp);

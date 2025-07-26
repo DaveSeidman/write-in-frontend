@@ -8,6 +8,14 @@ const Admin = () => {
   const socketRef = useRef();
   const [submissions, setSubmissions] = useState([]);
 
+  const reset = () => {
+    if (confirm(`This will remove all ${submissions.length} submissions, are you sure?`)) {
+      socketRef.current.emit('clear');
+    } else {
+      console.log("do nothing")
+    }
+  }
+
   useEffect(() => {
     const isLocalhost = window.location.hostname !== 'daveseidman.github.io';
     const URL = isLocalhost
@@ -58,13 +66,15 @@ const Admin = () => {
   return (
     <div className="admin">
       <h1>Admin</h1>
+      <button type="button" onClick={reset} disabled={submissions.length === 0}>Clear All Submissions</button>
       <div className="submission-list">
         {submissions.map((submission) => (
           <div
             key={submission.timestamp}
-            className="submission-item"
+            className={`submission-item ${submission.approved ? 'approved' : ''} ${submission.denied ? 'denied' : ''}`}
             style={{ opacity: submission.approved || submission.denied ? 0.5 : 1 }}
           >
+            {/* TODO, add a green check or red X in the corner if this submission was approved or denied */}
             <CanvasPreview points={submission.data} />
             <div className="actions">
               <button onClick={() => handleAction(submission.timestamp, 'approve')}>
