@@ -86,29 +86,25 @@ const CanvasPreview = ({ strokes }) => {
     });
   };
 
-
   const replay = () => {
-    console.log({ strokes })
     if (!strokes.length) return;
 
     const flatPoints = strokes.flat();
-    const startTime = flatPoints[0].t;
     let i = 1;
 
+    const animationStart = performance.now(); // <-- FIXED: animation timeline starts now
     const ctx = canvasRef.current.getContext('2d');
     ctx.clearRect(0, 0, width, height);
 
     const animate = () => {
-
       const now = performance.now();
-      const elapsed = now - startTime;
+      const elapsed = now - animationStart; // <-- FIXED: relative to wall-clock now
 
-      let tempStrokes = [[]];
+      let tempStrokes = strokes.map(() => []);
       for (let s = 0; s < strokes.length; s++) {
-        tempStrokes[s] = [];
         for (let j = 0; j < strokes[s].length; j++) {
           const pt = strokes[s][j];
-          if (pt.t - startTime <= elapsed) {
+          if (pt.t <= elapsed) { // <-- FIXED: use pt.t directly
             tempStrokes[s].push(pt);
           }
         }
@@ -116,7 +112,7 @@ const CanvasPreview = ({ strokes }) => {
 
       drawPoints(tempStrokes);
 
-      if (flatPoints[i] && flatPoints[i].t - startTime <= elapsed) {
+      if (flatPoints[i] && flatPoints[i].t <= elapsed) {
         i++;
       }
       if (i < flatPoints.length) {
@@ -126,6 +122,8 @@ const CanvasPreview = ({ strokes }) => {
 
     requestAnimationFrame(animate);
   };
+
+
   useEffect(() => {
     replay();
   }, [])
