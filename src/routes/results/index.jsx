@@ -80,7 +80,8 @@ const CanvasPreview = ({ strokes }) => {
   const height = 400;
 
   const drawPoints = (strokesArray, clear = true) => {
-    const ctx = canvasRef.current.getContext('2d');
+    const ctx = canvasRef.current?.getContext('2d');
+    if (!ctx) return;
     if (clear) ctx.clearRect(0, 0, width, height);
 
     ctx.fillStyle = 'black';
