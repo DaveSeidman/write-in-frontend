@@ -1,9 +1,9 @@
 import React, { useRef, useState, useEffect } from "react";
 import { getStroke } from "perfect-freehand";
-import { ptsToSvgPath } from "../../utils"; // adjust if needed
+import { ptsToSvgPath } from "../../utils";
 import { useWindowSize } from 'react-use';
 import { io } from "socket.io-client";
-import projectorPositions from '../../assets/data/projector-positions.json'
+import projectorPositions from '../../assets/data/projector-positions.json';
 
 import './index.scss';
 
@@ -14,17 +14,22 @@ const Results = () => {
     : 'https://cocktail-generator-server.onrender.com/';
 
   const [submissions, setSubmissions] = useState([]);
-  const socketRef = useRef();
-  const { width, height } = useWindowSize();
-  const [scale, setScale] = useState(1);
+  const latestSubmissions = useRef([]);
   const [positions, setPositions] = useState(projectorPositions);
   const [debug, setDebug] = useState(false);
+  const { width, height } = useWindowSize();
+  const [scale, setScale] = useState(1);
 
+  const socketRef = useRef();
   const ageSubmissionsInterval = useRef();
-  const removeSubmissionTimeout = useRef();
-  const addSubmissionTimeout = useRef();
+  const removeSubmissionInterval = useRef();
+  const addSubmissionInterval = useRef();
 
-  // console.log(positions)
+  // Keep ref in sync with state
+  useEffect(() => {
+    latestSubmissions.current = submissions;
+  }, [submissions]);
+
   useEffect(() => {
     const socket = io(URL, {
       transports: ['websocket'],
@@ -37,7 +42,6 @@ const Results = () => {
       console.log('✅ Connected to socket server (results):', socket.id);
     });
 
-    // TODO: change to "existing-submissions"?
     socket.on('approvedsubmissions', (data) => {
       console.log('📦 Approved submissions on boot:', data);
       setSubmissions(data.sort((a, b) => b.timestamp - a.timestamp));
@@ -45,175 +49,151 @@ const Results = () => {
 
     socket.on('submission-updated', (submission) => {
       if (!submission.approved) {
-        // Remove the denied submission from the list
-        setSubmissions(prev =>
-          prev.filter(s => s.timestamp !== submission.timestamp)
-        );
-        // TODO: also go through positions and remove any existing uses of this submission in the positions array
-        const nextPositions = positions.filter(p => p.submission?.timestamp !== submission.timestamp);
-        setPositions(nextPositions)
-
+        setSubmissions(prev => prev.filter(s => s.timestamp !== submission.timestamp));
+        setPositions(prev => prev.map(p =>
+          p.submission?.timestamp === submission.timestamp
+            ? { ...p, submission: null }
+            : p
+        ));
         return;
       }
 
+      // 1. Update submissions list
       setSubmissions(prev => {
-        const alreadyExists = prev.some(s => s.timestamp === submission.timestamp);
-        if (alreadyExists) {
-          return prev.map(s => s.timestamp === submission.timestamp ? submission : s);
+        const exists = prev.some(s => s.timestamp === submission.timestamp);
+        return exists
+          ? prev.map(s => s.timestamp === submission.timestamp ? submission : s)
+          : [submission, ...prev];
+      });
+
+      // 2. Place the new submission
+      setPositions(prev => {
+        // First look for empty position
+        const empty = prev.find(p => p.submission === null);
+        if (empty) {
+          return prev.map(p =>
+            p.id === empty.id ? { ...p, age: 0, submission } : p
+          );
         }
-        return [submission, ...prev];
+
+        // No empty positions, fall back to replacing the oldest
+        const oldest = prev.reduce((max, curr) =>
+          curr.age > max.age ? curr : max, prev[0]
+        );
+
+        return prev.map(p =>
+          p.id === oldest.id ? { ...p, age: 0, submission } : p
+        );
       });
     });
 
+    return () => socket.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (!submissions.length) return;
+    setPositions(prev =>
+      prev.map(pos => {
+        if (pos.submission === null) {
+          const random = latestSubmissions.current[Math.floor(Math.random() * latestSubmissions.current.length)];
+          return { ...pos, submission: random };
+        }
+        return pos;
+      })
+    );
+  }, [submissions]);
+
+  const ageSubmissions = () => {
+    setPositions(prev => prev.map(pos => ({ ...pos, age: pos.age + 1 })));
+  };
+
+  const removeSubmission = () => {
+    setPositions(prev => {
+      const oldPositions = prev.filter(p => p.age > 3);
+      if (!oldPositions.length) return prev;
+
+      const randomId = oldPositions[Math.floor(Math.random() * oldPositions.length)].id;
+      return prev.map(p =>
+        p.id === randomId ? { ...p, age: 0, submission: null } : p
+      );
+    });
+  };
+
+  const addSubmission = () => {
+    const subs = latestSubmissions.current;
+    console.log({ subs })
+    if (!subs.length) return;
+
+    setPositions(prev => {
+      const available = prev.filter(p => !p.submission);
+      if (!available.length) return prev;
+
+      const randomId = available[Math.floor(Math.random() * available.length)].id;
+      const randomSub = subs[Math.floor(Math.random() * subs.length)];
+
+      return prev.map(p =>
+        p.id === randomId ? { ...p, age: 0, submission: randomSub } : p
+      );
+    });
+  };
+
+  const keyDown = ({ key }) => {
+    if (key === 'F1') setDebug(prev => !prev);
+  };
+
+  useEffect(() => {
+    ageSubmissionsInterval.current = setTimeout(() => { setInterval(ageSubmissions, 1500); }, 0)
+    removeSubmissionInterval.current = setTimeout(() => { setInterval(removeSubmission, 1500); }, 500);
+    addSubmissionInterval.current = setTimeout(() => { setInterval(addSubmission, 1500); }, 1000);
+    addEventListener('keydown', keyDown);
+
     return () => {
-      socket.disconnect();
+      clearInterval(ageSubmissionsInterval.current);
+      clearInterval(removeSubmissionInterval.current);
+      clearInterval(addSubmissionInterval.current);
+      removeEventListener('keydown', keyDown);
     };
   }, []);
 
-
-  useEffect(() => {
-    console.log('assign submissions to positions');
-    if (!submissions.length) return;
-
-    const nextPositions = [...positions];
-    // loop over each position and give it a random submission (or a % blank?)
-    nextPositions.forEach(position => {
-      if (position.submission === null) {
-        position.submission = submissions[Math.floor(Math.random() * submissions.length)];
-      }
-    })
-    // console.log({ nextPositions })
-    setPositions(nextPositions)
-
-  }, [submissions])
-
-  const ageSubmissions = () => {
-    console.log('age')
-    setPositions(positions.map(pos => { return { ...pos, age: pos.age += 1 } }))
-  }
-
-  const removeSubmission = () => {
-    console.log('remove')
-    const nextPositions = [...positions];
-    const oldPositions = nextPositions.filter(pos => pos.age > 3);
-    if (!oldPositions.length) return;
-    const randomPosition = oldPositions[Math.floor(Math.random() * oldPositions.length)].id;
-
-    const positionsAfterRemoved = nextPositions.map(pos => {
-      if (pos.id === randomPosition) {
-        return {
-          id: pos.id,
-          x: pos.x,
-          y: pos.y,
-          age: 0,
-          submission: null
-        }
-      }
-      else {
-        return pos
-      }
-    });
-    setPositions(positionsAfterRemoved)
-    removeSubmissionTimeout.current = setTimeout(removeSubmission, (Math.random() * 100) + 100)
-  }
-
-  const addSubmission = () => {
-    console.log('add')
-    if (!submissions.length) return; // no submissions to add yet
-    const nextPositions = [...positions];
-    const availablePositions = nextPositions.filter(pos => !pos.submission);
-    if (!availablePositions.length) return; // no slots available for submissions
-
-    const randomPosition = availablePositions[Math.floor(Math.random() * availablePositions.length)].id;
-    const positionsAfterInsertion = nextPositions.map(pos => {
-      if (pos.id === randomPosition) {
-        return {
-          id: pos.id,
-          x: pos.x,
-          y: pos.y,
-          age: 0,
-          submission: submissions[Math.floor(Math.random() * submissions.length)]
-        }
-      }
-      else {
-        return pos
-      }
-    })
-    setPositions(positionsAfterInsertion)
-    addSubmissionTimeout.current = setTimeout(addSubmission, (Math.random() * 100) + 100)
-
-  }
-
-
-  const keyDown = ({ key }) => {
-    if (key === 'F1') setDebug(!debug)
-  }
-
-  useEffect(() => {
-    ageSubmissionsInterval.current = setInterval(ageSubmissions, 1000);
-    removeSubmissionTimeout.current = setTimeout(removeSubmission, (Math.random() * 100) + 100);
-    addSubmissionTimeout.current = setTimeout(addSubmission, (Math.random() * 100) + 100);
-
-    addEventListener('keydown', keyDown);
-
-    return (() => {
-      clearTimeout(removeSubmissionTimeout.current);
-      clearTimeout(addSubmissionTimeout.current);
-      clearInterval(ageSubmissionsInterval.current);
-      removeEventListener('keydown', keyDown);
-    })
-
-  }, [])
-
-  // Scale to fit
   useEffect(() => {
     const projectorWidth = 3840;
-    const projetorHeight = 2160;
-    const projectorAspect = projectorWidth / projetorHeight;
-    const windowAspect = width / height;
-    let nextScale = 1;
-    if (projectorAspect < windowAspect) {
-      nextScale = height / projetorHeight;
-    } else {
-      nextScale = width / projectorWidth;
-    }
-    setScale(nextScale);
+    const projectorHeight = 2160;
+    const aspectRatio = projectorWidth / projectorHeight;
+    const windowRatio = width / height;
+    const newScale = windowRatio < aspectRatio
+      ? width / projectorWidth
+      : height / projectorHeight;
+    setScale(newScale);
   }, [width, height]);
 
   return (
     <div className={`results ${debug ? 'debug' : ''}`} style={{ transform: `scale(${scale})` }}>
-
       <div className="results-positions2">
-        {positions.map(position =>
-        (<span
-          className="results-positions2-submission"
-          style={{
-            top: `${position.y * 100}%`,
-            left: `${position.x * 100}%`,
-          }}>
-          {position.submission ? (
-            <CanvasPreview
-              // data-id={position.submission.timestamp}
-              key={position.submission.timestamp}
-              strokes={position.submission.data}
-              id={position.submission.timestamp}
-            />
-          ) : (<span className="empty" />)}
-        </span>
-        )
-        )}
-      </div>
-      <div style={{ position: 'absolute', top: 0, right: 0 }}>
-        <button onClick={ageSubmissions}>Age</button>
-        <button onClick={addSubmission}>add</button>
-        <button onClick={removeSubmission}>remove</button>
+        {positions.map(position => (
+          <span
+            key={position.id}
+            className="results-positions2-submission"
+            style={{
+              top: `${position.y * 100}%`,
+              left: `${position.x * 100}%`,
+            }}
+          >
+            {position.submission ? (
+              <CanvasPreview
+                key={position.submission.timestamp}
+                strokes={position.submission.data}
+                id={position.submission.timestamp}
+              />
+            ) : (
+              <span className="empty" />
+            )}
+          </span>
+        ))}
       </div>
     </div>
   );
 };
 
-
-// TODO: extract this, should be available here and to /admin
 const CanvasPreview = ({ strokes, id }) => {
   const canvasRef = useRef();
   const width = 800;
@@ -225,7 +205,6 @@ const CanvasPreview = ({ strokes, id }) => {
     if (clear) ctx.clearRect(0, 0, width, height);
 
     ctx.fillStyle = 'brown';
-
     strokesArray.forEach(stroke => {
       const input = stroke.map(p => [p.x, p.y, p.pressure]);
       const outline = getStroke(input);
@@ -236,23 +215,21 @@ const CanvasPreview = ({ strokes, id }) => {
 
   const replay = () => {
     if (!strokes.length) return;
-
     const flatPoints = strokes.flat();
     let i = 1;
-
-    const animationStart = performance.now(); // <-- FIXED: animation timeline starts now
+    const animationStart = performance.now();
     const ctx = canvasRef.current.getContext('2d');
     ctx.clearRect(0, 0, width, height);
 
     const animate = () => {
       const now = performance.now();
-      const elapsed = now - animationStart; // <-- FIXED: relative to wall-clock now
+      const elapsed = now - animationStart;
 
-      let tempStrokes = strokes.map(() => []);
+      const tempStrokes = strokes.map(() => []);
       for (let s = 0; s < strokes.length; s++) {
         for (let j = 0; j < strokes[s].length; j++) {
           const pt = strokes[s][j];
-          if (pt.t <= elapsed) { // <-- FIXED: use pt.t directly
+          if (pt.t <= elapsed) {
             tempStrokes[s].push(pt);
           }
         }
@@ -260,24 +237,18 @@ const CanvasPreview = ({ strokes, id }) => {
 
       drawPoints(tempStrokes);
 
-      if (flatPoints[i] && flatPoints[i].t <= elapsed) {
-        i++;
-      }
-      if (i < flatPoints.length) {
-        requestAnimationFrame(animate);
-      }
+      if (flatPoints[i] && flatPoints[i].t <= elapsed) i++;
+      if (i < flatPoints.length) requestAnimationFrame(animate);
     };
 
     requestAnimationFrame(animate);
   };
 
-
   useEffect(() => {
     replay();
-  }, [])
+  }, []);
 
   return <canvas ref={canvasRef} width={800} height={400} className={`preview-canvas ${id}`} />;
 };
-
 
 export default Results;
