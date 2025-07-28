@@ -9,8 +9,10 @@
   transform-origin: top left;
   outline: 2px solid red;
 
-  // background: url('../../assets/images/layout1.png');
-  background-size: contain;
+  &.debug {
+    background: url('../../assets/images/layout1.png');
+      background-size: contain;
+  }
 
   .submission-list {
     // display: flex;
@@ -33,14 +35,22 @@
     &-submission {
       position: absolute;
       transform: translate(-50%, -50%);
-      width: 300px;
-      height: 150px;
+      width: 240px;
+      height: 110px;
       // outline: 2px solid red;
 
       .preview-canvas {
         width: 100%;
         height: 100%;
         // outline: 2px solid blue;
+      }
+
+      .empty {
+        width: 100%;
+        height: 100%;
+        position: absolute;
+        border: 3px black dashed;
+        border-radius: 50%;
       }
         // canvas 
     }

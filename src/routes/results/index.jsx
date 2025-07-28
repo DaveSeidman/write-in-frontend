@@ -18,9 +18,11 @@ const Results = () => {
   const { width, height } = useWindowSize();
   const [scale, setScale] = useState(1);
   const [positions, setPositions] = useState(projectorPositions);
+  const [debug, setDebug] = useState(false);
 
-  const removeSubmissionsInterval = useRef();
-  const addSubmissionsInterval = useRef();
+  const ageSubmissionsInterval = useRef();
+  const removeSubmissionTimeout = useRef();
+  const addSubmissionTimeout = useRef();
 
   // console.log(positions)
   useEffect(() => {
@@ -47,6 +49,10 @@ const Results = () => {
         setSubmissions(prev =>
           prev.filter(s => s.timestamp !== submission.timestamp)
         );
+        // TODO: also go through positions and remove any existing uses of this submission in the positions array
+        const nextPositions = positions.filter(p => p.submission?.timestamp !== submission.timestamp);
+        setPositions(nextPositions)
+
         return;
       }
 
@@ -76,40 +82,85 @@ const Results = () => {
         position.submission = submissions[Math.floor(Math.random() * submissions.length)];
       }
     })
-    console.log({ nextPositions })
+    // console.log({ nextPositions })
     setPositions(nextPositions)
 
   }, [submissions])
 
-  const removeSubmissions = () => {
-    const nextPositions = [...positions];
-    nextPositions.forEach(position => {
-      if (Math.random() > .9) {
-        position.submission = null;
-      }
-    })
-    setPositions(nextPositions)
+  const ageSubmissions = () => {
+    console.log('age')
+    setPositions(positions.map(pos => { return { ...pos, age: pos.age += 1 } }))
   }
 
-  const addSubmissions = () => {
+  const removeSubmission = () => {
+    console.log('remove')
     const nextPositions = [...positions];
-    nextPositions.forEach(position => {
-      if (Math.random() > 0.5 && !position.submission) {
-        position.submission = submissions[Math.floor(Math.random() * submissions.length)]
+    const oldPositions = nextPositions.filter(pos => pos.age > 3);
+    if (!oldPositions.length) return;
+    const randomPosition = oldPositions[Math.floor(Math.random() * oldPositions.length)].id;
+
+    const positionsAfterRemoved = nextPositions.map(pos => {
+      if (pos.id === randomPosition) {
+        return {
+          id: pos.id,
+          x: pos.x,
+          y: pos.y,
+          age: 0,
+          submission: null
+        }
+      }
+      else {
+        return pos
+      }
+    });
+    setPositions(positionsAfterRemoved)
+    removeSubmissionTimeout.current = setTimeout(removeSubmission, (Math.random() * 100) + 100)
+  }
+
+  const addSubmission = () => {
+    console.log('add')
+    if (!submissions.length) return; // no submissions to add yet
+    const nextPositions = [...positions];
+    const availablePositions = nextPositions.filter(pos => !pos.submission);
+    if (!availablePositions.length) return; // no slots available for submissions
+
+    const randomPosition = availablePositions[Math.floor(Math.random() * availablePositions.length)].id;
+    const positionsAfterInsertion = nextPositions.map(pos => {
+      if (pos.id === randomPosition) {
+        return {
+          id: pos.id,
+          x: pos.x,
+          y: pos.y,
+          age: 0,
+          submission: submissions[Math.floor(Math.random() * submissions.length)]
+        }
+      }
+      else {
+        return pos
       }
     })
-    setPositions(nextPositions)
+    setPositions(positionsAfterInsertion)
+    addSubmissionTimeout.current = setTimeout(addSubmission, (Math.random() * 100) + 100)
+
+  }
+
+
+  const keyDown = ({ key }) => {
+    if (key === 'F1') setDebug(!debug)
   }
 
   useEffect(() => {
-    removeSubmissionsInterval.current = setInterval(removeSubmissions, 1000);
-    setTimeout(() => {
-      addSubmissionsInterval.current = setInterval(addSubmissions, 1000);
-    }, 500)
+    ageSubmissionsInterval.current = setInterval(ageSubmissions, 1000);
+    removeSubmissionTimeout.current = setTimeout(removeSubmission, (Math.random() * 100) + 100);
+    addSubmissionTimeout.current = setTimeout(addSubmission, (Math.random() * 100) + 100);
+
+    addEventListener('keydown', keyDown);
 
     return (() => {
-      if (removeSubmissionsInterval.current) clearInterval(removeSubmissionsInterval.current);
-      if (addSubmissionsInterval.current) clearInterval(addSubmissionsInterval.current);
+      clearTimeout(removeSubmissionTimeout.current);
+      clearTimeout(addSubmissionTimeout.current);
+      clearInterval(ageSubmissionsInterval.current);
+      removeEventListener('keydown', keyDown);
     })
 
   }, [])
@@ -130,16 +181,7 @@ const Results = () => {
   }, [width, height]);
 
   return (
-    <div className="results" style={{ transform: `scale(${scale})` }}>
-      {/* <div className="submission-list">
-        {submissions.map((submission) => (
-          <CanvasPreview
-            key={submission.timestamp}
-            strokes={submission.data}
-          // animated={false}
-          />
-        ))}
-      </div> */}
+    <div className={`results ${debug ? 'debug' : ''}`} style={{ transform: `scale(${scale})` }}>
 
       <div className="results-positions2">
         {positions.map(position =>
@@ -149,35 +191,30 @@ const Results = () => {
             top: `${position.y * 100}%`,
             left: `${position.x * 100}%`,
           }}>
-          {position.submission && (
+          {position.submission ? (
             <CanvasPreview
+              // data-id={position.submission.timestamp}
               key={position.submission.timestamp}
               strokes={position.submission.data}
+              id={position.submission.timestamp}
             />
-          )}
+          ) : (<span className="empty" />)}
         </span>
         )
         )}
       </div>
-
-      {/* <div className="results-positions">
-        {projectorPositions.map(position => (
-          <span
-            className="results-positions-position"
-            style={{
-              top: `${position.y * 100}%`,
-              left: `${position.x * 100}%`,
-            }}
-          >{position.id}</span>
-        ))}
-      </div> */}
+      <div style={{ position: 'absolute', top: 0, right: 0 }}>
+        <button onClick={ageSubmissions}>Age</button>
+        <button onClick={addSubmission}>add</button>
+        <button onClick={removeSubmission}>remove</button>
+      </div>
     </div>
   );
 };
 
 
 // TODO: extract this, should be available here and to /admin
-const CanvasPreview = ({ strokes }) => {
+const CanvasPreview = ({ strokes, id }) => {
   const canvasRef = useRef();
   const width = 800;
   const height = 400;
@@ -239,7 +276,7 @@ const CanvasPreview = ({ strokes }) => {
     replay();
   }, [])
 
-  return <canvas ref={canvasRef} width={800} height={400} className="preview-canvas" />;
+  return <canvas ref={canvasRef} width={800} height={400} className={`preview-canvas ${id}`} />;
 };
 
 
