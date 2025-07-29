@@ -45,6 +45,7 @@ const Results = () => {
     socket.on('approvedsubmissions', (data) => {
       console.log('📦 Approved submissions on boot:', data);
       setSubmissions(data.sort((a, b) => b.timestamp - a.timestamp));
+      // TODO: this should somehow make sure any submissions that were removed are removed from the positions array
     });
 
     socket.on('submission-updated', (submission) => {
