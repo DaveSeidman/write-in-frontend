@@ -18,7 +18,7 @@ const Question = () => {
   const socketRef = useRef();
 
   const { width, height } = useWindowSize();
-  const titleHeight = 122;
+  const titleHeight = 120;
   // const width = 800;
   // const height = 400;
 
@@ -92,6 +92,13 @@ const Question = () => {
     reset();
   };
 
+  const handleFullscreenChange = (e) => {
+    // console.log(e)
+    // const isFullscreen = document.fullscreenElement || document.webkitFullscreenElement ||
+
+    setFullscreen(document.fullscreenElement !== null)
+  }
+
   useEffect(() => {
     const isLocalhost = window.location.hostname !== 'daveseidman.github.io';
     const URL = isLocalhost
@@ -109,8 +116,15 @@ const Question = () => {
       console.log('Connected to socket server:', socket.id);
     });
 
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', handleFullscreenChange); // Safari
+
+
     return () => {
       socket.disconnect();
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange); // Safari
+
     };
   }, []);
 
@@ -125,8 +139,8 @@ const Question = () => {
       </div>
       <canvas
         ref={canvasRef}
-        width={800}
-        height={400}
+        width={width}
+        height={height - titleHeight}
         className="question-canvas"
         // style={{ border: '1px solid #ccc', touchAction: 'none' }}
         onPointerDown={handlePointerDown}

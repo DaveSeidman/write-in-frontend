@@ -205,7 +205,7 @@ const CanvasPreview = ({ strokes, id }) => {
     if (!ctx) return;
     if (clear) ctx.clearRect(0, 0, width, height);
 
-    ctx.fillStyle = 'brown';
+    ctx.fillStyle = 'black';
     strokesArray.forEach(stroke => {
       const input = stroke.map(p => [p.x, p.y, p.pressure]);
       const outline = getStroke(input);
@@ -250,7 +250,7 @@ const CanvasPreview = ({ strokes, id }) => {
     replay();
   }, []);
 
-  return <canvas ref={canvasRef} width={800} height={400} className={`preview-canvas ${id}`} />;
+  return <canvas ref={canvasRef} width={1200} height={800 - 120} className={`preview-canvas ${id}`} />;
 };
 
 export default Results;

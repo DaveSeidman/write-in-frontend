@@ -112,7 +112,7 @@ const CanvasPreview = ({ points }) => {
     });
   }, [points]);
 
-  return <canvas ref={canvasRef} width={800} height={400} className="preview-canvas" />;
+  return <canvas ref={canvasRef} width={1200} height={800 - 120} className="preview-canvas" />;
 };
 
 // Sort by: unreviewed first (timestamp desc), then reviewed (timestamp desc)
