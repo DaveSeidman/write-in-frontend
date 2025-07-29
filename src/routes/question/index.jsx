@@ -125,8 +125,8 @@ const Question = () => {
       </div>
       <canvas
         ref={canvasRef}
-        width={width}
-        height={height - titleHeight}
+        width={800}
+        height={400}
         className="question-canvas"
         // style={{ border: '1px solid #ccc', touchAction: 'none' }}
         onPointerDown={handlePointerDown}
