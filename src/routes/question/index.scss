@@ -52,9 +52,7 @@
   &-canvas {
     position: absolute;
     top: 120px;
-    // outline: 3px solid red;
-    // margin: -1rem;
-    // width: 100%;
+    border: 1px dashed rgba(0, 0, 0, .5);
     touch-action: none;
   }
 
