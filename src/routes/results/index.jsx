@@ -218,13 +218,14 @@ const CanvasPreview = ({ strokes, id }) => {
     if (!strokes.length) return;
     const flatPoints = strokes.flat();
     let i = 1;
+    const speed = 2;
     const animationStart = performance.now();
     const ctx = canvasRef.current.getContext('2d');
     ctx.clearRect(0, 0, width, height);
 
     const animate = () => {
       const now = performance.now();
-      const elapsed = now - animationStart;
+      const elapsed = (now - animationStart) * speed;
 
       const tempStrokes = strokes.map(() => []);
       for (let s = 0; s < strokes.length; s++) {

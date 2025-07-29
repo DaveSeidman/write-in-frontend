@@ -1,7 +1,9 @@
 import React, { useRef, useState, useEffect } from "react";
 import { getStroke } from "perfect-freehand";
+import { useWindowSize } from 'react-use';
 import { ptsToSvgPath } from "../../utils";
 import { io } from "socket.io-client";
+import backgroundVideo from '../../assets/videos/background1.mp4'
 
 import './index.scss';
 
@@ -11,10 +13,14 @@ const Question = () => {
   const [strokes, setStrokes] = useState([]); // array of arrays
   const [isDrawing, setDrawing] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [fullscreen, setFullscreen] = useState(false);
+  const videoRef = useRef();
   const socketRef = useRef();
 
-  const width = 800;
-  const height = 400;
+  const { width, height } = useWindowSize();
+  const titleHeight = 122;
+  // const width = 800;
+  // const height = 400;
 
   const handlePointerDown = (e) => {
     const rect = canvasRef.current.getBoundingClientRect();
@@ -59,7 +65,7 @@ const Question = () => {
 
   const drawPoints = (strokesArray, clear = true) => {
     const ctx = canvasRef.current.getContext('2d');
-    if (clear) ctx.clearRect(0, 0, width, height);
+    if (clear) ctx.clearRect(0, 0, width, height - titleHeight);
 
     ctx.fillStyle = 'black';
 
@@ -73,7 +79,7 @@ const Question = () => {
 
   const reset = () => {
     const ctx = canvasRef.current.getContext('2d');
-    ctx.clearRect(0, 0, width, height);
+    ctx.clearRect(0, 0, width, height - titleHeight);
     setStrokes([]);
     t0Ref.current = null;
   };
@@ -110,27 +116,45 @@ const Question = () => {
 
   return (
     <div className="question">
-      <h2>Take your guess:</h2>
-      <h1>What breakthrough product will be revealed?</h1>
-      <p>product name only please, no brand guesses!!</p>
+      <div className="question-background">
+        <video ref={videoRef} src={backgroundVideo} autoplay loop muted />
+      </div>
+      <div className="question-title">
+        <h2>Take your guess:</h2>
+        <h1>What breakthrough product will be revealed?</h1>
+      </div>
       <canvas
         ref={canvasRef}
         width={width}
-        height={height}
-        className="signature-canvas"
-        style={{ border: '1px solid #ccc', touchAction: 'none' }}
+        height={height - titleHeight}
+        className="question-canvas"
+        // style={{ border: '1px solid #ccc', touchAction: 'none' }}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
         onPointerLeave={handlePointerUp}
       />
-      <div className="buttons">
-        <button onClick={reset} disabled={!strokes.length}>Reset</button>
-        <button onClick={submit} disabled={!strokes.length}>Submit</button>
+      <div className="question-controls">
+        <button className="question-controls-reset" onClick={reset} disabled={!strokes.length}></button>
+        <button className="question-controls-submit" onClick={submit} disabled={!strokes.length}></button>
       </div>
-      <div className={`thanks ${submitted ? '' : 'hidden'}`}>
-        <h1>Your Guess has been Submitted, Thanks!</h1>
+      <div className={`question-submitted ${submitted ? '' : 'hidden'}`}>
+        <h1>Thank you for submitting your guess!</h1>
       </div>
+      <p className="question-disclaimer">product name only please, no brand guesses!</p>
+
+
+      {!fullscreen && (<button
+        type="button"
+        style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}
+        onClick={() => {
+          document.documentElement.webkitRequestFullScreen();
+          setFullscreen(true);
+          videoRef.current.play();
+        }}
+      >
+        Touch To Begin
+      </button>)}
     </div>
   );
 };

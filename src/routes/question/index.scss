@@ -1,3 +1,112 @@
 .question {
-  margin: 1rem; 
+  // margin: 1rem; 
+  &-background {
+    position: absolute;
+    inset: 0;
+
+    video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+  }
+  &-title {
+    position: absolute;
+    height: 100px;
+    margin: 1rem;
+    width: calc(100% - 2rem);
+
+    &-line1, &-line2 {
+      display: flex;
+      width: 100%;
+      flex-direction: row;
+      justify-content: space-between;
+      align-items: flex-end;
+    }
+
+    h1, h2, p {
+      font-family: 'Neue Haas';
+      // display: inline-block;
+      margin: 1rem;
+      margin-bottom: 0;
+      // outline: 2px solid green;
+    }
+    h1 {
+      display: block;
+      font-size: 1.5rem;
+      font-weight: 500 !important;
+    }
+    h2 {
+      text-transform: uppercase;
+      font-weight: 100;
+      letter-spacing: .2rem;
+
+    }
+    p {
+      font-size: 1.125rem;
+      letter-spacing: .05rem;
+      // white-space: wrap;
+    }
+  }
+
+  &-canvas {
+    position: absolute;
+    top: 120px;
+    // outline: 3px solid red;
+    // margin: -1rem;
+    // width: 100%;
+    touch-action: none;
+  }
+
+  &-submitted {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: opacity .5s, visibility .5s, transform .5s;
+
+    &.hidden {
+      transform: translateY(1rem);
+    }
+  }
+
+  &-controls {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    margin: 0;
+
+    &-reset, &-submit {
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: center;
+      background-color: transparent;
+      width: 4rem;
+      height: 4rem;
+      margin: 1rem 2rem !important;
+      border: none;
+      transition: opacity .5s;
+    }
+
+    &-reset {
+      background-image: url('../../assets/images/reset.svg');
+    }
+
+    &-submit {
+      background-image: url('../../assets/images/submit.svg');
+
+    }
+  }
+
+  &-disclaimer {
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: 'Neue Haas';
+    letter-spacing: .05rem;
+  }
 }
