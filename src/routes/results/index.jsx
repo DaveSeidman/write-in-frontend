@@ -42,6 +42,7 @@ const Results = () => {
       console.log('✅ Connected to socket server (results):', socket.id);
     });
 
+    // TODO: in theory we could also call allsubmission's here and filter by approved
     socket.on('approvedsubmissions', (data) => {
       console.log('📦 Approved submissions on boot:', data);
       setSubmissions(data.sort((a, b) => b.timestamp - a.timestamp));

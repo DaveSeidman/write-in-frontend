@@ -11,8 +11,12 @@ const Admin = () => {
   const reset = () => {
     if (confirm(`This will remove all ${submissions.length} submissions, are you sure?`)) {
       socketRef.current.emit('clear');
-    } else {
-      console.log("do nothing")
+    }
+  }
+
+  const restart = () => {
+    if (confirm(`This will clear the wall and start animating subbmissions immediately, are you sure?`)) {
+      socketRef.current.emit('restart');
     }
   }
 
@@ -67,6 +71,7 @@ const Admin = () => {
     <div className="admin">
       <h1>Admin</h1>
       <button type="button" onClick={reset} disabled={submissions.length === 0}>Clear All Submissions</button>
+      <button type="button" onClick={restart} disabled={submissions.length === 0}>Restart Animation</button>
       <div className="submission-list">
         {submissions.map((submission) => (
           <div
@@ -91,6 +96,7 @@ const Admin = () => {
   );
 };
 
+// TODO: move this into a component
 const CanvasPreview = ({ points }) => {
   const canvasRef = useRef();
 
