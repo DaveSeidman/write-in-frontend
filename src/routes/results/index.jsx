@@ -38,18 +38,20 @@ const Results = () => {
 
     socketRef.current = socket;
 
-    socket.on('connect', () => {
+    socketRef.current.on('connect', () => {
       console.log('✅ Connected to socket server (results):', socket.id);
     });
 
+
+
     // TODO: in theory we could also call allsubmission's here and filter by approved
-    socket.on('approvedsubmissions', (data) => {
+    socketRef.current.on('approvedsubmissions', (data) => {
       console.log('📦 Approved submissions on boot:', data);
       setSubmissions(data.sort((a, b) => b.timestamp - a.timestamp));
       // TODO: this should somehow make sure any submissions that were removed are removed from the positions array
     });
 
-    socket.on('submission-updated', (submission) => {
+    socketRef.current.on('submission-updated', (submission) => {
       if (!submission.approved) {
         setSubmissions(prev => prev.filter(s => s.timestamp !== submission.timestamp));
         setPositions(prev => prev.map(p =>
@@ -89,7 +91,12 @@ const Results = () => {
       });
     });
 
-    return () => socket.disconnect();
+    socketRef.current.on('restart', () => {
+      console.log('restart here');
+      setPositions(projectorPositions)
+    })
+
+    return () => socketRef.current.disconnect();
   }, []);
 
   useEffect(() => {
