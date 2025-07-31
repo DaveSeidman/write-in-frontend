@@ -14,10 +14,10 @@ const Results = () => {
     : 'https://cocktail-generator-server.onrender.com/';
 
   const [submissions, setSubmissions] = useState([]);
-  const latestSubmissions = useRef([]);
+  const submissionsRef = useRef([]);
 
   const [positions, setPositions] = useState(projectorPositions);
-  const latestPositions = useRef([]);
+  const positionsRef = useRef([]);
 
   const [debug, setDebug] = useState(false);
   const { width, height } = useWindowSize();
@@ -29,19 +29,19 @@ const Results = () => {
 
   // Keep ref in sync with state
   useEffect(() => {
-    latestSubmissions.current = submissions;
+    submissionsRef.current = submissions;
   }, [submissions]);
 
   useEffect(() => {
-    latestPositions.current = positions
+    positionsRef.current = positions
   }, [positions])
 
 
   const addSubmissionToPosition = () => {
-    const availablePositions = latestPositions.current.filter(p => !p.submission);
-    if (!availablePositions.length || !latestSubmissions.current.length) return;
+    const availablePositions = positionsRef.current.filter(p => !p.submission);
+    if (!availablePositions.length || !submissionsRef.current.length) return;
     const randomPositionId = availablePositions[Math.floor(Math.random() * availablePositions.length)].id;
-    const unusedSubmissions = latestSubmissions.current.filter(s => !latestPositions.current.some(p => p.submission?.timestamp === s.timestamp));
+    const unusedSubmissions = submissionsRef.current.filter(s => !positionsRef.current.some(p => p.submission?.timestamp === s.timestamp));
     const randomSubmission = unusedSubmissions[Math.floor(Math.random() * unusedSubmissions.length)];
 
     if (!randomSubmission) {
@@ -77,7 +77,7 @@ const Results = () => {
       if (!submission.approved) {
         setSubmissions(prev => prev.filter(s => s.timestamp !== submission.timestamp))
         console.log('if this submission in a position, remove it', submission.timestamp)
-        setPositions(positions.filter(p => p.submission?.timestamp !== submission.timestamp))
+        setPositions(prev => prev.map(p => p.submission?.timestamp === submission.timestamp ? { ...p, submission: null } : p))
       } else {
         setSubmissions(prev => [...prev, submission]);
       }
@@ -87,7 +87,7 @@ const Results = () => {
       console.log('submissions:', submissions)
       intervals.current.forEach(i => clearInterval(i));
       setPositions(projectorPositions)
-      intervals.current.push(setInterval(addSubmissionToPosition, 100));
+      intervals.current.push(setInterval(addSubmissionToPosition, 500));
     })
 
     return () => {

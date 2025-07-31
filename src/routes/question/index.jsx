@@ -158,7 +158,7 @@ const Question = () => {
       <p className="question-disclaimer">product name only please, no brand guesses!</p>
 
 
-      {!fullscreen && (<button
+      {!fullscreen && false && (<button
         type="button"
         style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}
         onClick={() => {

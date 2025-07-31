@@ -51,6 +51,7 @@ const Admin = () => {
       setSubmissions(prev =>
         sortSubmissions(
           prev.map(sub =>
+            // TODO: move this into the sort?
             sub.timestamp === updated.timestamp ? updated : sub
           )
         )
@@ -69,9 +70,8 @@ const Admin = () => {
 
   return (
     <div className="admin">
-      <h1>Admin</h1>
-      <button type="button" onClick={reset} disabled={submissions.length === 0}>Clear All Submissions</button>
-      <button type="button" onClick={restart} disabled={submissions.length === 0}>Restart Animation</button>
+      <h1 className="admin-title">Admin</h1>
+      <button type="button" onClick={restart} disabled={submissions.length === 0}>Start Animation</button>
       <div className="submission-list">
         {submissions.map((submission) => (
           <div
@@ -91,6 +91,8 @@ const Admin = () => {
           </div>
         ))}
       </div>
+      <button type="button" onClick={reset} disabled={submissions.length === 0}>Clear All Submissions</button>
+
     </div>
   );
 };

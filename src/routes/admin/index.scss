@@ -2,18 +2,24 @@
   padding: 1rem;
   height: 100%;
   position: relative;
+
+  &-title {
+    margin: 0 1rem;
+  }
   .submission-list {
     position: relative;
     overflow-x: hidden;
     overflow-y: auto;
-    height: calc(100% - 13rem);
+    height: calc(100% - 20rem);
+    border: 2px dashed black;
   }
 
   .submission-item {
     border: 1px solid #ccc;
     padding: 1rem;
     background: #fafafa;
-    width: 400px;
+    width: 300px;
+    max-width: calc(100% - 2.5rem);
     position: relative;
     &.approved, &.denied {
       &:after {
