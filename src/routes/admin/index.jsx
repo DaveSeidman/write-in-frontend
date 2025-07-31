@@ -8,15 +8,21 @@ const Admin = () => {
   const socketRef = useRef();
   const [submissions, setSubmissions] = useState([]);
 
-  const reset = () => {
-    if (confirm(`This will remove all ${submissions.length} submissions, are you sure?`)) {
-      socketRef.current.emit('clear');
+  const deleteAll = () => {
+    if (confirm(`This will delete all ${submissions.length} submissions, are you sure?`)) {
+      socketRef.current.emit('deleteAll');
     }
   }
 
-  const restart = () => {
-    if (confirm(`This will clear the wall and start animating subbmissions immediately, are you sure?`)) {
-      socketRef.current.emit('restart');
+  const start = () => {
+    if (confirm('This will clear the wall and start animating subbmissions immediately, are you sure?')) {
+      socketRef.current.emit('start');
+    }
+  }
+
+  const clear = () => {
+    if (confirm('This will clear the wall after which you can start animating')) {
+      socketRef.current.emit('clear');
     }
   }
 
@@ -71,7 +77,8 @@ const Admin = () => {
   return (
     <div className="admin">
       <h1 className="admin-title">Admin</h1>
-      <button type="button" onClick={restart} disabled={submissions.length === 0}>Start Animation</button>
+      <button type="button" onClick={clear}>Clear Walls</button>
+      <button type="button" onClick={start} disabled={submissions.length === 0}>Start Animation</button>
       <div className="submission-list">
         {submissions.map((submission) => (
           <div
@@ -91,7 +98,7 @@ const Admin = () => {
           </div>
         ))}
       </div>
-      <button type="button" onClick={reset} disabled={submissions.length === 0}>Clear All Submissions</button>
+      <button type="button" onClick={deleteAll} disabled={submissions.length === 0}>Delete All Submissions</button>
 
     </div>
   );

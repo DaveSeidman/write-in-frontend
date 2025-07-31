@@ -83,7 +83,12 @@ const Results = () => {
       }
     });
 
-    socketRef.current.on('restart', () => {
+    socketRef.current.on('clear', () => {
+      setPositions(projectorPositions)
+      intervals.current.forEach(i => clearInterval(i))
+    })
+
+    socketRef.current.on('start', () => {
       console.log('submissions:', submissions)
       intervals.current.forEach(i => clearInterval(i));
       setPositions(projectorPositions)
