@@ -96,6 +96,10 @@ html, body, #root, .app {
     font-size: 2.5rem;
     // margin: 0;
   }
+
+  h1, h2, p {
+    user-select: none;
+  }
 }
 
 .hidden {

@@ -76,10 +76,9 @@ const Admin = () => {
         {submissions.map((submission) => (
           <div
             key={submission.timestamp}
-            className={`submission-item ${submission.approved ? 'approved' : ''} ${submission.denied ? 'denied' : ''}`}
+            className={`submission-item ${submission.approved === true ? 'approved' : submission.approved === false ? 'denied' : ''}`}
             style={{ opacity: submission.approved || submission.denied ? 0.5 : 1 }}
           >
-            {/* TODO, add a green check or red X in the corner if this submission was approved or denied */}
             <CanvasPreview points={submission.data} />
             <div className="actions">
               <button onClick={() => handleAction(submission.timestamp, 'approve')}>
@@ -123,16 +122,14 @@ const CanvasPreview = ({ points }) => {
 
 // Sort by: unreviewed first (timestamp desc), then reviewed (timestamp desc)
 function sortSubmissions(subs) {
-  return subs
-    .slice()
-    .sort((a, b) => {
-      const aReviewed = a.approved || a.denied;
-      const bReviewed = b.approved || b.denied;
-      if (aReviewed === bReviewed) {
-        return b.timestamp - a.timestamp; // newest first
-      }
-      return aReviewed ? 1 : -1; // reviewed go last
-    });
+  return subs.slice().sort((a, b) => {
+    const aReviewed = a.approved;
+    const bReviewed = b.approved;
+    if (aReviewed === bReviewed) {
+      return b.timestamp - a.timestamp; // newest first
+    }
+    return aReviewed ? 1 : -1; // reviewed go last
+  });
 }
 
 export default Admin;

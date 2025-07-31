@@ -15,20 +15,49 @@ const Results = () => {
 
   const [submissions, setSubmissions] = useState([]);
   const latestSubmissions = useRef([]);
+
   const [positions, setPositions] = useState(projectorPositions);
+  const latestPositions = useRef([]);
+
   const [debug, setDebug] = useState(false);
   const { width, height } = useWindowSize();
   const [scale, setScale] = useState(1);
+  const timeouts = useRef([]);
+  const intervals = useRef([]);
 
   const socketRef = useRef();
-  const ageSubmissionsInterval = useRef();
-  const removeSubmissionInterval = useRef();
-  const addSubmissionInterval = useRef();
 
   // Keep ref in sync with state
   useEffect(() => {
     latestSubmissions.current = submissions;
   }, [submissions]);
+
+  useEffect(() => {
+    latestPositions.current = positions
+  }, [positions])
+
+
+  const addSubmissionToPosition = () => {
+    const availablePositions = latestPositions.current.filter(p => !p.submission);
+    if (!availablePositions.length || !latestSubmissions.current.length) return;
+    const randomPositionId = availablePositions[Math.floor(Math.random() * availablePositions.length)].id;
+
+    const unusedSubmissions = latestSubmissions.current.filter(s => !latestPositions.current.some(p => p.submission?.timestamp === s.timestamp));
+    // console.log({ unusedSubmissions })
+    const randomSubmission = unusedSubmissions[Math.floor(Math.random() * unusedSubmissions.length)];
+
+    if (!randomSubmission) {
+      console.log('no submissions left to place');
+      // TODO: we could stop the interval here but we're going ot switch to setTimeout's anyway
+      return;
+    }
+    console.log(`there are ${availablePositions.length} available positions, assigning: ${randomSubmission.timestamp} to position: ${randomPositionId}`)
+    setPositions(prev => prev.map(p => {
+      if (p.id === randomPositionId) {
+        return { ...p, submission: randomSubmission }
+      } else return p
+    }))
+  }
 
   useEffect(() => {
     const socket = io(URL, {
@@ -44,122 +73,43 @@ const Results = () => {
 
 
 
-    // TODO: in theory we could also call allsubmission's here and filter by approved
-    socketRef.current.on('approvedsubmissions', (data) => {
-      console.log('📦 Approved submissions on boot:', data);
-      setSubmissions(data.sort((a, b) => b.timestamp - a.timestamp));
-      // TODO: this should somehow make sure any submissions that were removed are removed from the positions array
+    socketRef.current.on('allsubmissions', (data) => {
+      const approvedSubmissions = data.filter(s => s.approved)
+      console.log('📦 Approved submissions on boot:', approvedSubmissions);
+      setSubmissions(approvedSubmissions);
     });
 
     socketRef.current.on('submission-updated', (submission) => {
+      // remove submission
       if (!submission.approved) {
-        setSubmissions(prev => prev.filter(s => s.timestamp !== submission.timestamp));
-        setPositions(prev => prev.map(p =>
-          p.submission?.timestamp === submission.timestamp
-            ? { ...p, submission: null }
-            : p
-        ));
-        return;
+        setSubmissions(prev => prev.filter(s => s.timestamp !== submission.timestamp))
+      } else {
+        setSubmissions(prev => [...prev, submission])
       }
-
-      // 1. Update submissions list
-      setSubmissions(prev => {
-        const exists = prev.some(s => s.timestamp === submission.timestamp);
-        return exists
-          ? prev.map(s => s.timestamp === submission.timestamp ? submission : s)
-          : [submission, ...prev];
-      });
-
-      // 2. Place the new submission
-      setPositions(prev => {
-        // First look for empty position
-        const empty = prev.find(p => p.submission === null);
-        if (empty) {
-          return prev.map(p =>
-            p.id === empty.id ? { ...p, age: 0, submission } : p
-          );
-        }
-
-        // No empty positions, fall back to replacing the oldest
-        const oldest = prev.reduce((max, curr) =>
-          curr.age > max.age ? curr : max, prev[0]
-        );
-
-        return prev.map(p =>
-          p.id === oldest.id ? { ...p, age: 0, submission } : p
-        );
-      });
     });
 
     socketRef.current.on('restart', () => {
-      console.log('restart here');
+      console.log('submissions:', submissions)
+      intervals.current.forEach(i => clearInterval(i));
       setPositions(projectorPositions)
+      intervals.current.push(setInterval(addSubmissionToPosition, 100));
     })
 
-    return () => socketRef.current.disconnect();
+    return () => {
+      timeouts.current.forEach(t => clearTimeout(t));
+      intervals.current.forEach(i => clearInterval(i));
+      socketRef.current.disconnect();
+    }
   }, []);
-
-  useEffect(() => {
-    if (!submissions.length) return;
-    setPositions(prev =>
-      prev.map(pos => {
-        if (pos.submission === null) {
-          const random = latestSubmissions.current[Math.floor(Math.random() * latestSubmissions.current.length)];
-          return { ...pos, submission: random };
-        }
-        return pos;
-      })
-    );
-  }, [submissions]);
-
-  const ageSubmissions = () => {
-    setPositions(prev => prev.map(pos => ({ ...pos, age: pos.age + 1 })));
-  };
-
-  const removeSubmission = () => {
-    setPositions(prev => {
-      const oldPositions = prev.filter(p => p.age > 3);
-      if (!oldPositions.length) return prev;
-
-      const randomId = oldPositions[Math.floor(Math.random() * oldPositions.length)].id;
-      return prev.map(p =>
-        p.id === randomId ? { ...p, age: 0, submission: null } : p
-      );
-    });
-  };
-
-  const addSubmission = () => {
-    const subs = latestSubmissions.current;
-    console.log({ subs })
-    if (!subs.length) return;
-
-    setPositions(prev => {
-      const available = prev.filter(p => !p.submission);
-      if (!available.length) return prev;
-
-      const randomId = available[Math.floor(Math.random() * available.length)].id;
-      const randomSub = subs[Math.floor(Math.random() * subs.length)];
-
-      return prev.map(p =>
-        p.id === randomId ? { ...p, age: 0, submission: randomSub } : p
-      );
-    });
-  };
 
   const keyDown = ({ key }) => {
     if (key === 'F1') setDebug(prev => !prev);
   };
 
   useEffect(() => {
-    ageSubmissionsInterval.current = setTimeout(() => { setInterval(ageSubmissions, 1500); }, 0)
-    removeSubmissionInterval.current = setTimeout(() => { setInterval(removeSubmission, 1500); }, 500);
-    addSubmissionInterval.current = setTimeout(() => { setInterval(addSubmission, 1500); }, 1000);
     addEventListener('keydown', keyDown);
 
     return () => {
-      clearInterval(ageSubmissionsInterval.current);
-      clearInterval(removeSubmissionInterval.current);
-      clearInterval(addSubmissionInterval.current);
       removeEventListener('keydown', keyDown);
     };
   }, []);
