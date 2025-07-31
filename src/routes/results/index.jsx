@@ -41,9 +41,7 @@ const Results = () => {
     const availablePositions = latestPositions.current.filter(p => !p.submission);
     if (!availablePositions.length || !latestSubmissions.current.length) return;
     const randomPositionId = availablePositions[Math.floor(Math.random() * availablePositions.length)].id;
-
     const unusedSubmissions = latestSubmissions.current.filter(s => !latestPositions.current.some(p => p.submission?.timestamp === s.timestamp));
-    // console.log({ unusedSubmissions })
     const randomSubmission = unusedSubmissions[Math.floor(Math.random() * unusedSubmissions.length)];
 
     if (!randomSubmission) {
@@ -52,11 +50,7 @@ const Results = () => {
       return;
     }
     console.log(`there are ${availablePositions.length} available positions, assigning: ${randomSubmission.timestamp} to position: ${randomPositionId}`)
-    setPositions(prev => prev.map(p => {
-      if (p.id === randomPositionId) {
-        return { ...p, submission: randomSubmission }
-      } else return p
-    }))
+    setPositions(prev => prev.map(p => p.id === randomPositionId ? { ...p, submission: randomSubmission } : p));
   }
 
   useEffect(() => {
@@ -71,8 +65,6 @@ const Results = () => {
       console.log('✅ Connected to socket server (results):', socket.id);
     });
 
-
-
     socketRef.current.on('allsubmissions', (data) => {
       const approvedSubmissions = data.filter(s => s.approved)
       console.log('📦 Approved submissions on boot:', approvedSubmissions);
@@ -81,10 +73,13 @@ const Results = () => {
 
     socketRef.current.on('submission-updated', (submission) => {
       // remove submission
+      console.log('update', submission);
       if (!submission.approved) {
         setSubmissions(prev => prev.filter(s => s.timestamp !== submission.timestamp))
+        console.log('if this submission in a position, remove it', submission.timestamp)
+        setPositions(positions.filter(p => p.submission?.timestamp !== submission.timestamp))
       } else {
-        setSubmissions(prev => [...prev, submission])
+        setSubmissions(prev => [...prev, submission]);
       }
     });
 

@@ -153,7 +153,7 @@ const Question = () => {
         <button className="question-controls-submit" onClick={submit} disabled={!strokes.length}></button>
       </div>
       <div className={`question-submitted ${submitted ? '' : 'hidden'}`}>
-        <h1>Thank you for submitting your guess!</h1>
+        <h1>Thank you for your guess<br></br>you'll discover the breakthrough innovation soon.</h1>
       </div>
       <p className="question-disclaimer">product name only please, no brand guesses!</p>
 

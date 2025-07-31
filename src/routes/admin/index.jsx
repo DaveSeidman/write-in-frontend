@@ -81,10 +81,10 @@ const Admin = () => {
           >
             <CanvasPreview points={submission.data} />
             <div className="actions">
-              <button onClick={() => handleAction(submission.timestamp, 'approve')}>
+              <button disabled={submission.approved === true} onClick={() => handleAction(submission.timestamp, 'approve')}>
                 Approve
               </button>
-              <button onClick={() => handleAction(submission.timestamp, 'deny')}>
+              <button disabled={submission.approved === false} onClick={() => handleAction(submission.timestamp, 'deny')}>
                 Deny
               </button>
             </div>
@@ -123,8 +123,8 @@ const CanvasPreview = ({ points }) => {
 // Sort by: unreviewed first (timestamp desc), then reviewed (timestamp desc)
 function sortSubmissions(subs) {
   return subs.slice().sort((a, b) => {
-    const aReviewed = a.approved;
-    const bReviewed = b.approved;
+    const aReviewed = a.approved !== null;
+    const bReviewed = b.approved !== null;
     if (aReviewed === bReviewed) {
       return b.timestamp - a.timestamp; // newest first
     }
