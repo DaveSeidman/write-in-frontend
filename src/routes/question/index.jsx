@@ -119,6 +119,8 @@ const Question = () => {
     document.addEventListener('fullscreenchange', handleFullscreenChange);
     document.addEventListener('webkitfullscreenchange', handleFullscreenChange); // Safari
 
+    document.body.style.overflow = 'hidden';
+    // document.documentElement.style.overflow = 'hidden'
 
     return () => {
       socket.disconnect();

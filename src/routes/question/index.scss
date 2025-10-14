@@ -45,7 +45,7 @@
   &-canvas {
     position: absolute;
     top: 120px;
-    // border: 1px dashed rgba(0, 0, 0, .5);
+    // border: 1px dashed rgba(255, 255, 255, .5);
     touch-action: none;
   }
 
@@ -86,11 +86,12 @@
     }
 
     &-reset {
-      background-image: url('../../assets/images/reset.svg');
+      background: url('../../assets/images/reset.svg') !important;
+      background-size: contain !important;
     }
 
     &-submit {
-      background-image: url('../../assets/images/submit.svg');
+      background: url('../../assets/images/submit.svg') !important;
 
     }
   }

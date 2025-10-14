@@ -1,17 +1,27 @@
 .admin {
   padding: 1rem;
-  height: 100%;
-  position: relative;
+
+  & button {
+    border-radius: 2rem;
+    border: 1px solid white;
+    padding: 0.5rem 1rem;
+    font-size: 1rem;
+    margin: 1rem !important;
+    cursor: pointer;
+  }
 
   &-title {
     margin: 0 1rem;
   }
   .submission-list {
     position: relative;
-    overflow-x: hidden;
-    overflow-y: auto;
+    // overflow-x: hidden;
+    // overflow-y: auto;
     height: calc(100% - 20rem);
     border: 2px dashed black;
+    display: flex;
+    flex-wrap: wrap;
+
   }
 
   .submission-item {
@@ -21,6 +31,19 @@
     width: 300px;
     max-width: calc(100% - 2.5rem);
     position: relative;
+    transition: opacity .5s;
+    margin: 1rem;
+    p {
+      font-family: 'Arial';
+      margin: 0 0 1rem;
+
+    }
+    .actions {
+      button {
+        padding: .5rem 1rem;
+        margin: 0 !important;
+      }
+    }
     &.approved, &.denied {
       &:after {
         position: absolute;
@@ -41,7 +64,7 @@
     width: 100%;
     max-width: 800px;
     height: auto;
-    border: 1px solid #eee;
+    // border: 1px solid #eee;
     display: block;
   }
 
@@ -49,11 +72,5 @@
     margin-top: 1rem;
     display: flex;
     gap: 1rem;
-  }
-
-  button {
-    padding: 0.5rem 1rem;
-    font-size: 1rem;
-    cursor: pointer;
   }
 }

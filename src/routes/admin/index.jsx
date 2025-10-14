@@ -80,23 +80,32 @@ const Admin = () => {
       <button type="button" onClick={clear}>Clear Walls</button>
       <button type="button" onClick={start} disabled={submissions.length === 0}>Start Animation</button>
       <div className="submission-list">
-        {submissions.map((submission) => (
-          <div
-            key={submission.timestamp}
-            className={`submission-item ${submission.approved === true ? 'approved' : submission.approved === false ? 'denied' : ''}`}
-            style={{ opacity: submission.approved || submission.denied ? 0.5 : 1 }}
-          >
-            <CanvasPreview points={submission.data} />
-            <div className="actions">
-              <button disabled={submission.approved === true} onClick={() => handleAction(submission.timestamp, 'approve')}>
-                Approve
-              </button>
-              <button disabled={submission.approved === false} onClick={() => handleAction(submission.timestamp, 'deny')}>
-                Deny
-              </button>
+        {submissions.map((submission) => {
+          const date = new Date(submission.timestamp);
+          const timeString = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true, });
+          return (
+            <div
+              key={submission.timestamp}
+              className={`submission-item ${submission.approved === true ? 'approved' : submission.approved === false ? 'denied' : ''}`}
+              style={{ opacity: submission.approved || submission.denied ? 0.5 : 1 }}
+            >
+              <p>submitted at {timeString}</p>
+              <CanvasPreview points={submission.data} />
+              <div className="actions">
+                <button disabled={submission.approved === true} onClick={() => handleAction(submission.timestamp, 'approve')}>
+                  Approve
+                </button>
+                <button disabled={submission.approved === false} onClick={() => handleAction(submission.timestamp, 'deny')}>
+                  Deny
+                </button>
+                <button onClick={() => handleAction(submission.timestamp, 'delete')}>
+                  Delete
+                </button>
+              </div>
             </div>
-          </div>
-        ))}
+          )
+        }
+        )}
       </div>
       <button type="button" onClick={deleteAll} disabled={submissions.length === 0}>Delete All Submissions</button>
 
