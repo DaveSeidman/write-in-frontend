@@ -103,7 +103,7 @@ const Question = () => {
     const isLocalhost = window.location.hostname !== 'daveseidman.github.io';
     const URL = isLocalhost
       ? `http://${location.hostname}:8000`
-      : 'https://cocktail-generator-server.onrender.com/';
+      : 'https://write-in-backend.onrender.com/';
 
     const socket = io(URL, {
       transports: ['websocket'],
@@ -131,7 +131,7 @@ const Question = () => {
   return (
     <div className="question">
       <div className="question-background">
-        <video ref={videoRef} src={backgroundVideo} autoplay loop muted />
+        <video ref={videoRef} src={backgroundVideo} autoPlay loop muted />
       </div>
       <div className="question-title">
         <h2>Take your guess:</h2>
@@ -157,8 +157,7 @@ const Question = () => {
       </div>
       <p className="question-disclaimer">product name only please, no brand guesses!</p>
 
-
-      {!fullscreen && (<button
+      {!fullscreen && location.hostname !== 'localhost' && (<button
         type="button"
         style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}
         onClick={() => {

@@ -30,7 +30,7 @@ const Admin = () => {
     const isLocalhost = window.location.hostname !== 'daveseidman.github.io';
     const URL = isLocalhost
       ? `http://${location.hostname}:8000`
-      : 'https://cocktail-generator-server.onrender.com/';
+      : 'https://write-in-backend.onrender.com/';
 
     const socket = io(URL, {
       transports: ['websocket'],
