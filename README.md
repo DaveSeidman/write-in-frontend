@@ -24,4 +24,8 @@ socket server: https://github.com/DaveSeidman/write-in-backend
 
 ### local dev: 
 
-clone each repo, `npm i`, `npm start` in each, visit http://localhost:8080/
+Clone each repo, `npm i`, `npm start` in each, visit http://localhost:8080/
+
+To update the staging url, push or merge into the staging branch.  
+
+To update the backend, just push to main
