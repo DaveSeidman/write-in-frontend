@@ -126,6 +126,7 @@ const Question = () => {
       socket.disconnect();
       document.removeEventListener('fullscreenchange', handleFullscreenChange);
       document.removeEventListener('webkitfullscreenchange', handleFullscreenChange); // Safari
+      document.body.style.overflow = 'unset';
 
     };
   }, []);
@@ -151,7 +152,7 @@ const Question = () => {
         <button className="question-controls-submit" onClick={submit} disabled={!strokes.length}></button>
       </div>
       <div className={`question-submitted ${submitted ? '' : 'hidden'}`}>
-        <h1>Thank you</h1>
+        <h1>Thank you for sharing your vision with us!</h1>
       </div>
 
       {!fullscreen && location.hostname !== 'localhost' && (<button
