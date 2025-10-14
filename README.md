@@ -2,6 +2,8 @@
 
 live demo: https://daveseidman.github.io/write-in-frontend/. 
 
+video overview: https://drive.google.com/file/d/15TJupaHwQFir-lpZNEQcrznOiUw6fuJW/view
+
 ### App Flow:
 
 Guests are presented with tablet pointed to:   
