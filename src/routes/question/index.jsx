@@ -67,7 +67,7 @@ const Question = () => {
     const ctx = canvasRef.current.getContext('2d');
     if (clear) ctx.clearRect(0, 0, width, height - titleHeight);
 
-    ctx.fillStyle = 'black';
+    ctx.fillStyle = 'white';
 
     strokesArray.forEach(stroke => {
       const input = stroke.map(p => [p.x, p.y, p.pressure]);
@@ -130,12 +130,8 @@ const Question = () => {
 
   return (
     <div className="question">
-      <div className="question-background">
-        <video ref={videoRef} src={backgroundVideo} autoPlay loop muted />
-      </div>
       <div className="question-title">
-        <h2>Take your guess:</h2>
-        <h1>What breakthrough product will be revealed?</h1>
+        <h1>What do you wish for the future of our people?</h1>
       </div>
       <canvas
         ref={canvasRef}
@@ -153,9 +149,8 @@ const Question = () => {
         <button className="question-controls-submit" onClick={submit} disabled={!strokes.length}></button>
       </div>
       <div className={`question-submitted ${submitted ? '' : 'hidden'}`}>
-        <h1>Thank you for your guess<br></br>you'll discover the breakthrough innovation soon.</h1>
+        <h1>Thank you</h1>
       </div>
-      <p className="question-disclaimer">product name only please, no brand guesses!</p>
 
       {!fullscreen && location.hostname !== 'localhost' && (<button
         type="button"

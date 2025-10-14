@@ -114,7 +114,7 @@ const CanvasPreview = ({ points }) => {
 
     const ctx = canvas.getContext('2d');
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = 'black';
+    ctx.fillStyle = 'white';
 
     points.forEach(strokePoints => {
       if (!Array.isArray(strokePoints) || strokePoints.length === 0) return;

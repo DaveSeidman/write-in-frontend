@@ -163,7 +163,7 @@ const CanvasPreview = ({ strokes, id }) => {
     if (!ctx) return;
     if (clear) ctx.clearRect(0, 0, width, height);
 
-    ctx.fillStyle = 'rgb(63,13,26)';
+    ctx.fillStyle = 'white';
     strokesArray.forEach(stroke => {
       const input = stroke.map(p => [p.x, p.y, p.pressure]);
       const outline = getStroke(input);

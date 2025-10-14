@@ -5,9 +5,9 @@
   top: 0%;
   width: 3840px;
   height: 2160px;
-  background: src.$stone;
+  // background: src.$stone;
   transform-origin: top left;
-  outline: 2px solid red;
+  // outline: 2px solid red;
 
   &.debug {
     background: url('../../assets/images/layout1.png');
@@ -22,7 +22,7 @@
     // justify-content: center;
     // align-items: center;
     .preview-canvas {
-      outline: 5px solid red;
+      // outline: 5px solid red;
       width: 400px;
       height: 150px;
     }
