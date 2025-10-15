@@ -155,8 +155,8 @@ const Results = () => {
 
 const CanvasPreview = ({ strokes, id }) => {
   const canvasRef = useRef();
-  const width = 2960;
-  const height = 1848 - 120;
+  const width = 1692;
+  const height = 1056 - 120;
 
   const drawPoints = (strokesArray, clear = true) => {
     const ctx = canvasRef.current?.getContext('2d');
@@ -208,7 +208,7 @@ const CanvasPreview = ({ strokes, id }) => {
     replay();
   }, []);
 
-  return <canvas ref={canvasRef} width={2960} height={1848 - 120} className={`preview-canvas ${id}`} />;
+  return <canvas ref={canvasRef} width={1692} height={1056 - 120} className={`preview-canvas ${id}`} />;
 };
 
 export default Results;

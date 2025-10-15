@@ -17,13 +17,13 @@ const Question = () => {
   const videoRef = useRef();
   const socketRef = useRef();
 
-  const { width, height } = useWindowSize();
+  // const { width, height } = useWindowSize();
   const titleHeight = 120;
+  const width = 1692;
+  const height = 1056;
 
   console.log('width', width);
   console.log('height', height - titleHeight);
-  // const width = 800;
-  // const height = 400;
 
   const handlePointerDown = (e) => {
     const rect = canvasRef.current.getBoundingClientRect();
