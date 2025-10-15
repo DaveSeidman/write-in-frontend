@@ -19,6 +19,9 @@ const Question = () => {
 
   const { width, height } = useWindowSize();
   const titleHeight = 120;
+
+  console.log('width', width);
+  console.log('height', height - titleHeight);
   // const width = 800;
   // const height = 400;
 
