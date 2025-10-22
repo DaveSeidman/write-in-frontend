@@ -1,0 +1,28 @@
+.layout {
+  position: absolute;
+  background: white;
+  width: 100%;
+  height: 100%;
+
+  .controls {
+    position: absolute;
+    top: 0;
+    left: 0;
+    margin: 1rem;
+
+    input[type="text"] {
+      width: 500px;
+      font-size: 2rem;
+      padding: .5rem 1rem;
+    }
+    label {
+      color: black;
+    }
+  }
+  .canvas {
+    position: absolute;
+    top: 25px;
+    left: 25px;
+    outline: 1px solid black;
+  }
+}
