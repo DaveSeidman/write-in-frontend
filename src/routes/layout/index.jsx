@@ -15,68 +15,54 @@ function pointInPolygon(p, polygon) {
   return inside;
 }
 
-// --- relaxation physics (same as before) ---
-function relaxPointsInPolygon(polygon, n, iterations = 400) {
-  if (polygon.length < 3) return [];
+// --- sample a random point guaranteed inside polygon bounding box ---
+function randomPointInsidePolygon(polygon) {
+  const xs = polygon.map(p => p.x);
+  const ys = polygon.map(p => p.y);
+  const minX = Math.min(...xs),
+    maxX = Math.max(...xs),
+    minY = Math.min(...ys),
+    maxY = Math.max(...ys);
+  let pt;
+  let attempts = 0;
+  do {
+    pt = {
+      x: minX + Math.random() * (maxX - minX),
+      y: minY + Math.random() * (maxY - minY)
+    };
+    attempts++;
+  } while (!pointInPolygon(pt, polygon) && attempts < 500);
+  return pt;
+}
 
-  const xs = polygon.map(p => p.x), ys = polygon.map(p => p.y);
-  const minX = Math.min(...xs), maxX = Math.max(...xs);
-  const minY = Math.min(...ys), maxY = Math.max(...ys);
-  const width = maxX - minX, height = maxY - minY;
-  const area = width * height;
-
-  const randPoint = () => {
-    let p;
-    do {
-      p = { x: minX + Math.random() * width, y: minY + Math.random() * height };
-    } while (!pointInPolygon(p, polygon));
-    return p;
-  };
-
-  const points = Array.from({ length: n }, randPoint);
-  const idealDist = Math.sqrt(area / n) * 0.6;
-
-  for (let step = 0; step < iterations; step++) {
-    const forces = points.map(() => ({ x: 0, y: 0 }));
-
-    for (let i = 0; i < n; i++) {
-      for (let j = i + 1; j < n; j++) {
-        const dx = points[j].x - points[i].x;
-        const dy = points[j].y - points[i].y;
-        const distSq = dx * dx + dy * dy;
-        const dist = Math.sqrt(distSq) + 0.001;
-        const force = (idealDist * idealDist) / distSq;
-        const fx = (dx / dist) * force;
-        const fy = (dy / dist) * force;
-        forces[i].x -= fx;
-        forces[i].y -= fy;
-        forces[j].x += fx;
-        forces[j].y += fy;
-      }
-    }
-
-    for (let i = 0; i < n; i++) {
-      points[i].x += forces[i].x * 0.01;
-      points[i].y += forces[i].y * 0.01;
-      if (!pointInPolygon(points[i], polygon)) {
-        const cx = xs.reduce((a, b) => a + b, 0) / xs.length;
-        const cy = ys.reduce((a, b) => a + b, 0) / ys.length;
-        points[i].x += (cx - points[i].x) * 0.1;
-        points[i].y += (cy - points[i].y) * 0.1;
-      }
+// --- create stationary wall points along polygon edges ---
+function getWallPoints(polygon, spacing = 6) {
+  const wallPoints = [];
+  for (let i = 0; i < polygon.length; i++) {
+    const a = polygon[i];
+    const b = polygon[(i + 1) % polygon.length];
+    const dx = b.x - a.x;
+    const dy = b.y - a.y;
+    const len = Math.sqrt(dx * dx + dy * dy);
+    const steps = Math.floor(len / spacing);
+    for (let s = 0; s <= steps; s++) {
+      wallPoints.push({
+        x: a.x + (dx * s) / steps,
+        y: a.y + (dy * s) / steps
+      });
     }
   }
-  return points;
+  return wallPoints;
 }
 
 export default function Layout() {
   const canvasRef = useRef(null);
   const [polygon, setPolygon] = useState([]);
   const [numPoints, setNumPoints] = useState(80);
-  const [size, setSize] = useState(12);
-  const [points, setPoints] = useState([]); // [{x,y,angle}]
+  const [size, setSize] = useState(10);
+  const [points, setPoints] = useState([]);
+  const [walls, setWalls] = useState([]);
 
-  // click to add polygon vertices
   const handleCanvasClick = e => {
     const rect = e.target.getBoundingClientRect();
     const x = e.clientX - rect.left;
@@ -84,64 +70,140 @@ export default function Layout() {
     setPolygon(prev => [...prev, { x, y }]);
   };
 
-  // recompute points (and assign stable rotations) when polygon or count changes
+  // spawn particles INSIDE the polygon safely
   useEffect(() => {
-    if (polygon.length >= 3) {
-      const raw = relaxPointsInPolygon(polygon, numPoints, 400);
-      // assign a stable random angle to each point (e.g., ±20°)
-      const maxTilt = (20 * Math.PI) / 180;
-      const withAngles = raw.map(p => ({
+    if (polygon.length < 3) return;
+    const pts = Array.from({ length: numPoints }, () => {
+      const p = randomPointInsidePolygon(polygon);
+      return {
         ...p,
-        angle: (Math.random() * 2 - 1) * maxTilt
-      }));
-      setPoints(withAngles);
-    } else {
-      setPoints([]);
-    }
+        vx: 0,
+        vy: 0,
+        sleepCount: 0,
+        asleep: false,
+        angle: Math.random() * Math.PI * 2
+      };
+    });
+    setPoints(pts);
+    setWalls(getWallPoints(polygon, 6));
   }, [polygon, numPoints]);
 
-  // draw
+  // main simulation loop
   useEffect(() => {
+    if (polygon.length < 3 || points.length === 0) return;
+
     const canvas = canvasRef.current;
     const ctx = canvas.getContext("2d");
-    // clear using actual canvas size
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // polygon
-    if (polygon.length > 0) {
+    const maxSpeed = 3;
+    const damping = 0.9;
+    const repulsionStrength = 1000;
+    const wallStrengthBase = 4000; // much stronger than before
+    const wallInfluenceDist = 60;
+    const sleepThreshold = 0.02;
+    const sleepFrames = 10;
+
+    let frame;
+    const loop = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      const next = points.map(p => ({ ...p }));
+
+      for (let i = 0; i < next.length; i++) {
+        const pi = next[i];
+        if (pi.asleep) continue;
+
+        let fx = 0,
+          fy = 0;
+
+        // inter-particle repulsion
+        for (let j = 0; j < next.length; j++) {
+          if (i === j) continue;
+          const pj = next[j];
+          const dx = pi.x - pj.x;
+          const dy = pi.y - pj.y;
+          const distSq = dx * dx + dy * dy + 0.01;
+          const dist = Math.sqrt(distSq);
+          const force = repulsionStrength / distSq;
+          fx += (dx / dist) * force;
+          fy += (dy / dist) * force;
+        }
+
+        // wall repulsion (adaptive)
+        for (const w of walls) {
+          const dx = pi.x - w.x;
+          const dy = pi.y - w.y;
+          const distSq = dx * dx + dy * dy + 0.01;
+          const dist = Math.sqrt(distSq);
+          if (dist < wallInfluenceDist) {
+            // stronger closer to wall
+            const strength =
+              wallStrengthBase * (1 - dist / wallInfluenceDist);
+            fx += (dx / dist) * strength / distSq;
+            fy += (dy / dist) * strength / distSq;
+          }
+        }
+
+        // integrate motion
+        pi.vx = (pi.vx + fx * 0.01) * damping;
+        pi.vy = (pi.vy + fy * 0.01) * damping;
+
+        const speed = Math.sqrt(pi.vx * pi.vx + pi.vy * pi.vy);
+        if (speed > maxSpeed) {
+          pi.vx *= maxSpeed / speed;
+          pi.vy *= maxSpeed / speed;
+        }
+
+        pi.x += pi.vx;
+        pi.y += pi.vy;
+
+        // if escaped (failsafe), snap gently back inside
+        if (!pointInPolygon(pi, polygon)) {
+          const safe = randomPointInsidePolygon(polygon);
+          pi.x = safe.x;
+          pi.y = safe.y;
+          pi.vx *= 0.2;
+          pi.vy *= 0.2;
+        }
+
+        // sleep logic
+        if (speed < sleepThreshold) pi.sleepCount++;
+        else pi.sleepCount = 0;
+        if (pi.sleepCount > sleepFrames) pi.asleep = true;
+      }
+
+      for (let i = 0; i < points.length; i++) points[i] = next[i];
+
+      // draw polygon
       ctx.beginPath();
       polygon.forEach((p, i) => {
         if (i === 0) ctx.moveTo(p.x, p.y);
         else ctx.lineTo(p.x, p.y);
       });
-      if (polygon.length >= 3) ctx.closePath();
+      ctx.closePath();
       ctx.strokeStyle = "#00bcd4";
       ctx.lineWidth = 2;
       ctx.stroke();
-      if (polygon.length >= 3) {
-        ctx.fillStyle = "rgba(0,188,212,0.1)";
-        ctx.fill();
-      }
-      // vertices
-      polygon.forEach(p => {
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, 3, 0, Math.PI * 2);
-        ctx.fillStyle = "#00bcd4";
-        ctx.fill();
-      });
-    }
+      ctx.fillStyle = "rgba(0,188,212,0.05)";
+      ctx.fill();
 
-    // rotated squares centered on points (no jitter)
-    const half = size / 2;
-    ctx.fillStyle = "#ffca28";
-    points.forEach(p => {
-      ctx.save();
-      ctx.translate(p.x, p.y);
-      ctx.rotate(p.angle || 0);
-      ctx.fillRect(-half, -half, size, size);
-      ctx.restore();
-    });
-  }, [polygon, points, size]);
+      // draw squares
+      const half = size / 2;
+      for (const p of points) {
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.angle);
+        ctx.fillStyle = p.asleep ? "#ffca28" : "#00c853";
+        ctx.fillRect(-half, -half, size, size);
+        ctx.restore();
+      }
+
+      frame = requestAnimationFrame(loop);
+    };
+
+    frame = requestAnimationFrame(loop);
+    return () => cancelAnimationFrame(frame);
+  }, [polygon, points, size, walls]);
 
   return (
     <div className="layout" style={{ userSelect: "none" }}>
@@ -158,7 +220,7 @@ export default function Layout() {
           <input
             type="range"
             min="1"
-            max="200"
+            max="500"
             value={numPoints}
             onChange={e => setNumPoints(parseInt(e.target.value))}
           />
@@ -168,7 +230,7 @@ export default function Layout() {
           <input
             type="range"
             min="2"
-            max="60"
+            max="50"
             value={size}
             onChange={e => setSize(parseInt(e.target.value))}
           />
