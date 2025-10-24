@@ -6,12 +6,12 @@ import matplotlib.pyplot as plt
 
 # Resolve paths
 CWD = os.getcwd()
-INPUT_IMAGE = os.path.join(CWD, 'src', 'assets', 'images', 'layout.png')
+INPUT_IMAGE = os.path.join(CWD, 'src', 'assets', 'images', 'layout_generated.png')
 OUTPUT_JSON = os.path.join(CWD, 'src', 'assets', 'data', 'projector-positions.json')
 
 # Canvas constants (known original resolution)
-TARGET_WIDTH = 3840
-TARGET_HEIGHT = 2160
+TARGET_WIDTH = 1920
+TARGET_HEIGHT = 1080
 
 # Load image
 image = cv2.imread(INPUT_IMAGE)

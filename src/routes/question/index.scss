@@ -28,6 +28,8 @@
       display: block;
       font-size: 1.5rem;
       font-weight: 500 !important;
+      margin-top: 1.75rem;
+      text-align: center;
     }
     h2 {
       text-transform: uppercase;
@@ -42,21 +44,28 @@
     }
   }
 
-  &-canvas {
+  &-canvas-wrap {
     position: absolute;
     top: 120px;
     // border: 1px dashed rgba(255, 255, 255, .5);
+    padding: 50px;
+    box-sizing: border-box;
     touch-action: none;
+    background: url('src/assets/images/postit-drawing-background.png');
   }
 
   &-submitted {
     pointer-events: none;
     position: absolute;
     inset: 0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    // display: flex;
+    // justify-content: center;
+    // align-items: center;
     text-align: center;
+    color: #000;
+    font-weight: bold;
+    max-width: 750px;
+    margin: 25% auto;
     transition: opacity .5s, visibility .5s, transform .5s;
 
     &.hidden {
@@ -66,7 +75,7 @@
 
   &-controls {
     position: absolute;
-    bottom: 0;
+    bottom: 30px;
     width: 100%;
     display: flex;
     justify-content: space-between;
@@ -76,23 +85,22 @@
       background-size: contain;
       background-repeat: no-repeat;
       background-position: center;
-      background-color: transparent;
+      background-color: #000;
       width: 4rem;
       height: 4rem;
-      margin: 1rem 2rem !important;
+      margin: 1rem 2rem;
       border: none;
-      transition: opacity .5s;
-      filter: invert(1);
     }
 
     &-reset {
       background: url('../../assets/images/reset.svg') !important;
       background-size: contain !important;
+      margin-left: 30px !important;
     }
 
     &-submit {
       background: url('../../assets/images/submit.svg') !important;
-
+      margin-right: 60px !important;
     }
   }
 

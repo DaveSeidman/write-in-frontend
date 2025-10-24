@@ -17,10 +17,11 @@ const Question = () => {
   const videoRef = useRef();
   const socketRef = useRef();
 
-  // const { width, height } = useWindowSize();
+  const { width, height } = useWindowSize();
   const titleHeight = 120;
-  const width = 1692;
-  const height = 1056;
+  const padding = 50;
+  // const width = 1692;
+  // const height = 1056;
 
   console.log('width', width);
   console.log('height', height - titleHeight);
@@ -70,7 +71,7 @@ const Question = () => {
     const ctx = canvasRef.current.getContext('2d');
     if (clear) ctx.clearRect(0, 0, width, height - titleHeight);
 
-    ctx.fillStyle = 'white';
+    ctx.fillStyle = 'black';
 
     strokesArray.forEach(stroke => {
       const input = stroke.map(p => [p.x, p.y, p.pressure]);
@@ -137,25 +138,27 @@ const Question = () => {
   return (
     <div className="question">
       <div className="question-title">
-        <h1>What do you wish for the future of our people?</h1>
+        <h1>Share your favorite lunchbox note memory, or write one for someone else!</h1>
       </div>
-      <canvas
-        ref={canvasRef}
-        width={width}
-        height={height - titleHeight}
-        className="question-canvas"
-        // style={{ border: '1px solid #ccc', touchAction: 'none' }}
-        onPointerDown={handlePointerDown}
-        onPointerMove={handlePointerMove}
-        onPointerUp={handlePointerUp}
-        onPointerLeave={handlePointerUp}
-      />
+      <div className="question-canvas-wrap">
+        <canvas
+          ref={canvasRef}
+          width={width - (padding*2)}
+          height={height - titleHeight - (padding*2)}
+          className="question-canvas"
+          // style={{ border: '1px solid #ccc', touchAction: 'none' }}
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerUp}
+          onPointerLeave={handlePointerUp}
+        />
+      </div>
       <div className="question-controls">
         <button className="question-controls-reset" onClick={reset} disabled={!strokes.length}></button>
         <button className="question-controls-submit" onClick={submit} disabled={!strokes.length}></button>
       </div>
       <div className={`question-submitted ${submitted ? '' : 'hidden'}`}>
-        <h1>Thank you for sharing your vision with us!</h1>
+        <h1>Thank you for sharing! Your note is now part of our collective lunchbox of memories and a reminder of what real connection feels like...no screens required.</h1>
       </div>
 
       {!fullscreen && location.hostname !== 'localhost' && (<button
