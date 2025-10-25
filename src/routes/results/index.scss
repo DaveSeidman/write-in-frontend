@@ -45,6 +45,7 @@
         background: url('../../assets/images/postit-render-background.png');
         background-size: 100%;
         background-position: center;
+        background-repeat: no-repeat;
         opacity: 0;
         animation: fadeIn 1s forwards;
       }
