@@ -276,7 +276,11 @@ const CanvasPreview = ({ strokes, id }) => {
     return () => clearTimeout(timer);
   }, []);
 
-  return <canvas ref={canvasRef} width={1692} height={1056 - 120} className={`preview-canvas ${id}`} style={{ transform: `rotate(${rotation}deg)` }} />;
+  return (
+    <div width={1692} height={1056 - 120} className={`canvas-wrap ${id}`} style={{ transform: `rotate(${rotation}deg)` }}>
+      <canvas ref={canvasRef} className={`preview-canvas ${id}`} width={1692} height={1056 - 120}  />
+    </div>
+  );
 };
 
 export default Results;

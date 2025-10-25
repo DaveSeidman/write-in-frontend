@@ -48,7 +48,7 @@
     position: absolute;
     top: 120px;
     // border: 1px dashed rgba(255, 255, 255, .5);
-    padding: 50px;
+    padding: 20px 80px 80px 20px;
     box-sizing: border-box;
     touch-action: none;
     background: url('../../assets/images/postit-drawing-background.png');
@@ -75,7 +75,7 @@
 
   &-controls {
     position: absolute;
-    bottom: 30px;
+    bottom: 45px;
     width: 100%;
     display: flex;
     justify-content: space-between;
@@ -95,12 +95,12 @@
     &-reset {
       background: url('../../assets/images/reset.svg') !important;
       background-size: contain !important;
-      margin-left: 30px !important;
+      margin-left: 40px !important;
     }
 
     &-submit {
       background: url('../../assets/images/submit.svg') !important;
-      margin-right: 60px !important;
+      margin-right: 80px !important;
     }
   }
 
