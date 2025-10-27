@@ -53,9 +53,19 @@
         animation: fadeIn 1s forwards;
       }
 
+      &.fade-out .canvas-wrap {
+        animation: fadeOut 1s forwards;
+      }
+
       @keyframes fadeIn {
         to {
           opacity: 1;
+        }
+      }
+
+      @keyframes fadeOut {
+        to {
+          opacity: 0;
         }
       }
 

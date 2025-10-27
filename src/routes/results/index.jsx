@@ -110,6 +110,28 @@ const Results = () => {
       }
     });
 
+    // Handle unpublish - fade out and remove from display
+    socketRef.current.on('unpublish', (timestamp) => {
+      console.log('unpublishing submission:', timestamp);
+      // Find the position element and add fade-out class
+      const positionWithSubmission = positionsRef.current.find(p => p.submission?.timestamp === timestamp);
+      if (positionWithSubmission) {
+        // Add fade-out class to trigger animation
+        const element = document.querySelector(`.results-positions2-submission .canvas-wrap.${timestamp}`);
+        if (element) {
+          element.parentElement.classList.add('fade-out');
+          // After animation completes, remove from position
+          setTimeout(() => {
+            setPositions(prev => prev.map(p =>
+              p.submission?.timestamp === timestamp ? { ...p, submission: null } : p
+            ));
+          }, 1000); // Match fade-out animation duration
+        }
+      }
+      // Remove from submissions list
+      setSubmissions(prev => prev.filter(s => s.timestamp !== timestamp));
+    });
+
     // Admin pressed "clear" - reset all positions to empty
     socketRef.current.on('clear', () => {
       setPositions(projectorPositions)
@@ -184,6 +206,11 @@ const Results = () => {
                 key={position.submission.timestamp}
                 strokes={position.submission.data}
                 id={position.submission.timestamp}
+                onAnimationComplete={() => {
+                  // Mark this submission as displayed
+                  console.log('Animation complete for submission:', position.submission.timestamp);
+                  socketRef.current?.emit('displayed', position.submission.timestamp);
+                }}
               />
             ) : (
               // Empty placeholder when no submission assigned
@@ -200,7 +227,7 @@ const Results = () => {
  * CanvasPreview - Renders a single submission's drawing with animated replay
  * Canvas dimensions match the question page drawing area (1692×936)
  */
-const CanvasPreview = ({ strokes, id }) => {
+const CanvasPreview = ({ strokes, id, onAnimationComplete }) => {
   const canvasRef = useRef();
   const width = 1692;
   const height = 1056 - 120; // 936px (1056 - 120 for header area)
@@ -260,7 +287,12 @@ const CanvasPreview = ({ strokes, id }) => {
 
       // Continue animation until all points are drawn
       if (flatPoints[i] && flatPoints[i].t <= elapsed) i++;
-      if (i < flatPoints.length) requestAnimationFrame(animate);
+      if (i < flatPoints.length) {
+        requestAnimationFrame(animate);
+      } else {
+        // Animation complete - notify parent
+        onAnimationComplete?.();
+      }
     };
 
     requestAnimationFrame(animate);

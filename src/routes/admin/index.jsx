@@ -64,6 +64,17 @@ const Admin = () => {
       );
     });
 
+    // Handle displayed status updates
+    socket.on('submission-displayed', (updated) => {
+      setSubmissions(prev =>
+        sortSubmissions(
+          prev.map(sub =>
+            sub.timestamp === updated.timestamp ? updated : sub
+          )
+        )
+      );
+    });
+
     return () => {
       socket.disconnect();
     };
@@ -98,9 +109,15 @@ const Admin = () => {
                 <button disabled={submission.approved === false} onClick={() => handleAction(submission.timestamp, 'deny')}>
                   Deny
                 </button>
-                <button onClick={() => handleAction(submission.timestamp, 'delete')}>
-                  Delete
-                </button>
+                {submission.approved && submission.displayed ? (
+                  <button onClick={() => handleAction(submission.timestamp, 'unpublish')}>
+                    Unpublish
+                  </button>
+                ) : (
+                  <button onClick={() => handleAction(submission.timestamp, 'delete')}>
+                    Delete
+                  </button>
+                )}
               </div>
             </div>
           )
