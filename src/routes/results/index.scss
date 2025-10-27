@@ -8,6 +8,7 @@
   height: var(--projector-height, 1080px);
   transform-origin: top left;
   outline: 1px solid white;
+  background: #fff;
 
   &.debug {
     background: url('../../assets/images/layout_generated.png');
