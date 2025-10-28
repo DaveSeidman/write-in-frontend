@@ -72,6 +72,9 @@ const Results = () => {
     console.log(`there are ${availablePositions.length} available positions, assigning: ${randomSubmission.timestamp} to position: ${randomPositionId}`)
     // Update the position to include the submission
     setPositions(prev => prev.map(p => p.id === randomPositionId ? { ...p, submission: randomSubmission } : p));
+
+    // Mark submission as displayed immediately when animation begins
+    socketRef.current?.emit('displayed', randomSubmission.timestamp);
   }
 
   // Setup socket connection and event handlers
@@ -206,11 +209,6 @@ const Results = () => {
                 key={position.submission.timestamp}
                 strokes={position.submission.data}
                 id={position.submission.timestamp}
-                onAnimationComplete={() => {
-                  // Mark this submission as displayed
-                  console.log('Animation complete for submission:', position.submission.timestamp);
-                  socketRef.current?.emit('displayed', position.submission.timestamp);
-                }}
               />
             ) : (
               // Empty placeholder when no submission assigned
@@ -227,7 +225,7 @@ const Results = () => {
  * CanvasPreview - Renders a single submission's drawing with animated replay
  * Canvas dimensions match the question page drawing area (1692×936)
  */
-const CanvasPreview = ({ strokes, id, onAnimationComplete }) => {
+const CanvasPreview = ({ strokes, id }) => {
   const canvasRef = useRef();
   const width = 1692;
   const height = 1056 - 120; // 936px (1056 - 120 for header area)
@@ -287,12 +285,7 @@ const CanvasPreview = ({ strokes, id, onAnimationComplete }) => {
 
       // Continue animation until all points are drawn
       if (flatPoints[i] && flatPoints[i].t <= elapsed) i++;
-      if (i < flatPoints.length) {
-        requestAnimationFrame(animate);
-      } else {
-        // Animation complete - notify parent
-        onAnimationComplete?.();
-      }
+      if (i < flatPoints.length) requestAnimationFrame(animate);
     };
 
     requestAnimationFrame(animate);
